@@ -30,11 +30,20 @@
                 android:background="@drawable/menu_card_bg"
                 android:elevation="8dp">
                 <!-- Здесь будет SurfaceView/ImageView для камеры -->
-                <SurfaceView
+                <androidx.camera.view.PreviewView
                     android:id="@+id/camera_preview"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_gravity="center" />
+
+                <ImageView
+                    android:id="@+id/result_overlay"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:scaleType="fitCenter"
+                    android:background="@android:color/transparent"
+                    android:visibility="visible" />
 
                 <!-- Оверлей для сетки -->
                 <View
