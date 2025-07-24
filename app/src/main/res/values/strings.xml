@@ -1,0 +1,27 @@
+<resources>
+    <string name="app_name">Сканер тестов</string>
+    <string name="menu_scan">Сканирование в реальном времени</string>
+    <string name="menu_scan_desc">Проверка тестов через камеру устройства с мгновенным результатом</string>
+    <string name="menu_batch">Пакетная обработка</string>
+    <string name="menu_batch_desc">Загрузка и обработка нескольких тестов одновременно</string>
+    <string name="menu_reports">Отчёты</string>
+    <string name="menu_reports_desc">Просмотр и анализ результатов тестирования</string>
+    <string name="menu_instructions">Инструкция</string>
+    <string name="menu_instructions_desc">Подробное руководство по использованию системы</string>
+    <string name="menu_constructor">Конструктор бланков</string>
+    <string name="menu_constructor_desc">Создание и настройка бланков для тестирования</string>
+    <string name="menu_multiple">Множественный выбор</string>
+    <string name="menu_multiple_desc">Проверка тестов с несколькими правильными ответами</string>
+    <string name="menu_icon_desc">Иконка раздела меню</string>
+    <string name="camera_settings_button">Настройки камеры</string>
+    <string name="stop_frame_button">Стоп-кадр</string>
+    <string name="add_to_report_button">Добавить в отчёт</string>
+    <string name="toggle_grid_button">Показать/скрыть сетку</string>
+    <string name="update_answers_button">Обновить ответы</string>
+    <string name="overlay_mode_button">Режим наложения</string>
+    <string name="close_settings_button">Закрыть</string>
+    <string name="brightness_label">Яркость</string>
+    <string name="contrast_label">Контраст</string>
+    <string name="saturation_label">Насыщенность</string>
+    <string name="sharpness_label">Резкость</string>
+</resources>

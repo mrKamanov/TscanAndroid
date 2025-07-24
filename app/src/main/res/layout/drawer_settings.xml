@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="320dp"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/menu_card_bg"
+    android:padding="20dp"
+    android:layout_gravity="start">
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_nav_home"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Главная"
+        android:textColor="@color/text_inverse"
+        app:icon="@drawable/overlay_mode_button"
+        app:iconTint="@color/text_inverse"
+        app:iconGravity="textStart"
+        android:backgroundTint="@color/primary"
+        app:cornerRadius="16dp"
+        app:strokeColor="@color/text_inverse"
+        app:strokeWidth="2dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp"
+        android:layout_marginTop="32dp"
+        android:layout_marginBottom="8dp"
+        android:elevation="4dp"
+        style="@style/Widget.MaterialComponents.Button" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_nav_reports"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Отчёты"
+        android:textColor="@color/text_inverse"
+        app:icon="@drawable/update_answers_button"
+        app:iconTint="@color/text_inverse"
+        app:iconGravity="textStart"
+        android:backgroundTint="@color/primary"
+        app:cornerRadius="16dp"
+        app:strokeColor="@color/text_inverse"
+        app:strokeWidth="2dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp"
+        android:layout_marginBottom="32dp"
+        android:elevation="4dp"
+        style="@style/Widget.MaterialComponents.Button" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Настройки"
+        android:textColor="@color/text"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:fontFamily="@font/krabuler"
+        android:paddingBottom="8dp" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#22446688"
+        android:layout_marginBottom="16dp" />
+
+    <Button
+        android:id="@+id/btn_drawer_start_camera"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Включить камеру"
+        android:backgroundTint="@color/success"
+        android:textColor="@color/text_inverse"
+        android:layout_marginBottom="8dp" />
+    <Button
+        android:id="@+id/btn_drawer_stop_camera"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Выключить камеру"
+        android:backgroundTint="@color/error"
+        android:textColor="@color/text_inverse"
+        android:layout_marginBottom="8dp" />
+    <Button
+        android:id="@+id/btn_drawer_hide_video"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Скрыть видео"
+        android:backgroundTint="@color/secondary"
+        android:textColor="@color/text_inverse"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Параметры сетки"
+        android:textColor="@color/text"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:fontFamily="@font/krabuler"
+        android:paddingTop="12dp"
+        android:paddingBottom="8dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="#222E3440"
+        android:padding="12dp"
+        android:layout_marginBottom="12dp"
+        android:layout_marginTop="4dp"
+        android:radius="12dp">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Количество вопросов:"
+            android:textColor="@color/text"
+            android:textSize="14sp"
+            android:fontFamily="@font/krabuler" />
+        <EditText
+            android:id="@+id/edit_questions"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:inputType="number"
+            android:textColor="@color/text"
+            android:textSize="16sp"
+            android:fontFamily="@font/krabuler"
+            android:padding="8dp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="#222E3440"
+        android:padding="12dp"
+        android:radius="12dp">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Количество вариантов:"
+            android:textColor="@color/text"
+            android:textSize="14sp"
+            android:fontFamily="@font/krabuler" />
+        <EditText
+            android:id="@+id/edit_choices"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:inputType="number"
+            android:textColor="@color/text"
+            android:textSize="16sp"
+            android:fontFamily="@font/krabuler"
+            android:padding="8dp" />
+    </LinearLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_apply_grid_settings"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Применить"
+        android:textColor="@color/text_inverse"
+        app:icon="@drawable/apply_settings_button"
+        app:iconTint="@color/text_inverse"
+        app:iconGravity="textStart"
+        android:backgroundTint="@color/success"
+        app:cornerRadius="16dp"
+        app:strokeColor="@color/text_inverse"
+        app:strokeWidth="2dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp"
+        android:elevation="4dp"
+        style="@style/Widget.MaterialComponents.Button" />
+
+</LinearLayout> 

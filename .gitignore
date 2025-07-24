@@ -1,0 +1,12 @@
+TscanSDK/
+sdk/
+build/
+.idea/
+*.iml
+*.log
+*.tmp
+*.bat
+*.sh
+.DS_Store
+.gradle/
+local.properties
