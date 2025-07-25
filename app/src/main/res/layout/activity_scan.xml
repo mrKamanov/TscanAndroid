@@ -46,8 +46,17 @@
                     android:visibility="visible" />
 
                 <!-- Оверлей для сетки -->
-                <View
+                <LinearLayout
                     android:id="@+id/grid_overlay"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@android:color/transparent"
+                    android:visibility="gone"
+                    android:orientation="vertical" />
+
+                <!-- Оверлей для результатов проверки -->
+                <FrameLayout
+                    android:id="@+id/results_overlay"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:background="@android:color/transparent"
@@ -104,10 +113,12 @@
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_stop_frame"
                 android:layout_width="0dp"
-                android:layout_height="48dp"
+                android:layout_height="64dp"
                 android:layout_weight="1"
                 app:icon="@drawable/stop_frame_button"
+                app:iconSize="32dp"
                 app:iconTint="@color/text_inverse"
+                app:iconGravity="textTop"
                 android:backgroundTint="@color/primary"
                 app:cornerRadius="16dp"
                 app:strokeColor="@color/text_inverse"
@@ -119,10 +130,12 @@
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_add_to_report"
                 android:layout_width="0dp"
-                android:layout_height="48dp"
+                android:layout_height="64dp"
                 android:layout_weight="1"
                 app:icon="@drawable/add_to_report_button"
+                app:iconSize="32dp"
                 app:iconTint="@color/text_inverse"
+                app:iconGravity="textTop"
                 android:backgroundTint="@color/success"
                 app:cornerRadius="16dp"
                 app:strokeColor="@color/text_inverse"
@@ -134,10 +147,12 @@
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_toggle_grid"
                 android:layout_width="0dp"
-                android:layout_height="48dp"
+                android:layout_height="64dp"
                 android:layout_weight="1"
                 app:icon="@drawable/ic_grid_on"
+                app:iconSize="32dp"
                 app:iconTint="@color/text_inverse"
+                app:iconGravity="textTop"
                 android:backgroundTint="@color/secondary"
                 app:cornerRadius="16dp"
                 app:strokeColor="@color/text_inverse"
@@ -149,10 +164,12 @@
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_update_answers"
                 android:layout_width="0dp"
-                android:layout_height="48dp"
+                android:layout_height="64dp"
                 android:layout_weight="1"
                 app:icon="@drawable/update_answers_button"
+                app:iconSize="32dp"
                 app:iconTint="@color/text_inverse"
+                app:iconGravity="textTop"
                 android:backgroundTint="@color/primary"
                 app:cornerRadius="16dp"
                 app:strokeColor="@color/text_inverse"
@@ -164,10 +181,12 @@
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_overlay_mode"
                 android:layout_width="0dp"
-                android:layout_height="48dp"
+                android:layout_height="64dp"
                 android:layout_weight="1"
                 app:icon="@drawable/ic_layers"
+                app:iconSize="32dp"
                 app:iconTint="@color/text_inverse"
+                app:iconGravity="textTop"
                 android:backgroundTint="@color/secondary"
                 app:cornerRadius="16dp"
                 app:strokeColor="@color/text_inverse"
@@ -179,10 +198,12 @@
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_camera_settings"
                 android:layout_width="0dp"
-                android:layout_height="48dp"
+                android:layout_height="64dp"
                 android:layout_weight="1"
                 app:icon="@drawable/camera_settings_button"
+                app:iconSize="32dp"
                 app:iconTint="@color/text_inverse"
+                app:iconGravity="textTop"
                 android:backgroundTint="@color/primary"
                 app:cornerRadius="16dp"
                 app:strokeColor="@color/text_inverse"
@@ -217,6 +238,33 @@
                     android:textSize="14sp"
                     android:padding="12dp" />
             </androidx.cardview.widget.CardView>
+        </FrameLayout>
+
+        <!-- Кнопка проверки в стиле фотокамеры -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:layout_gravity="bottom|center_horizontal"
+            android:layout_marginBottom="120dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_toggle_processing"
+                android:layout_width="90dp"
+                android:layout_height="90dp"
+                android:layout_gravity="center"
+                app:icon="@drawable/ic_check_circle"
+                app:iconSize="70dp"
+                app:iconTint="@color/text_inverse"
+                app:iconGravity="textTop"
+                android:backgroundTint="@color/success"
+                app:cornerRadius="45dp"
+                app:strokeColor="@color/text_inverse"
+                app:strokeWidth="3dp"
+                app:elevation="8dp"
+                style="@style/Widget.MaterialComponents.Button.Icon"
+                android:contentDescription="Включить/выключить проверку" />
+
         </FrameLayout>
 
     </FrameLayout>
