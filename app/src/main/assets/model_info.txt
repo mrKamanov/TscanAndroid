@@ -1,0 +1,22 @@
+OMR Classification Model
+=======================
+
+Model Information:
+- Architecture: ResNet18 with custom head
+- Input Size: 224x224 RGB
+- Output: 2 classes (empty/filled)
+- Training Data: 5000 images
+- Test Accuracy: 99.80%
+- Model Size: 43.8 MB
+
+Usage in Android:
+1. Load model: PyTorch Mobile
+2. Preprocess image: resize to 224x224, normalize
+3. Run inference
+4. Get probabilities for empty/filled classes
+
+Model Files:
+- omr_model.pt: TorchScript model
+- model_config.json: Configuration
+
+Created: 2025-07-28 02:31:36

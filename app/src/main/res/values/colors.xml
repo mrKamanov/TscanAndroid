@@ -19,5 +19,6 @@
     <color name="success">#A3BE8C</color>
     <color name="warning">#EBCB8B</color>
     <color name="info">#81A1C1</color>
+    <color name="accent">#D08770</color>
     <color name="border">#FFFFFF</color>
 </resources>

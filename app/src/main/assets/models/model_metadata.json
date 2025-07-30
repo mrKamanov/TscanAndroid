@@ -1,0 +1,68 @@
+{
+  "model_info": {
+    "name": "OMR_Classification_Model",
+    "description": "Модель для классификации OMR ячеек (пустая/заполненная)",
+    "version": "2.0",
+    "author": "AI Assistant",
+    "original_format": "PyTorch",
+    "converted_formats": [
+      "ONNX",
+      "TensorFlow Lite"
+    ]
+  },
+  "input": {
+    "name": "input",
+    "description": "Входное изображение (224x224x3 RGB)",
+    "shape": [
+      224,
+      224,
+      3
+    ],
+    "type": "float32"
+  },
+  "output": {
+    "name": "output",
+    "description": "Выход классификации (2 класса: empty, filled)",
+    "shape": [
+      1,
+      2
+    ],
+    "type": "float32",
+    "classes": [
+      "empty",
+      "filled"
+    ]
+  },
+  "preprocessing": {
+    "mean": [
+      0.485,
+      0.456,
+      0.406
+    ],
+    "std": [
+      0.229,
+      0.224,
+      0.225
+    ],
+    "confidence_threshold": 0.8
+  },
+  "model_config": {
+    "input_size": 224,
+    "num_classes": 2,
+    "class_names": [
+      "empty",
+      "filled"
+    ],
+    "mean": [
+      0.485,
+      0.456,
+      0.406
+    ],
+    "std": [
+      0.229,
+      0.224,
+      0.225
+    ],
+    "confidence_threshold": 0.8
+  }
+}

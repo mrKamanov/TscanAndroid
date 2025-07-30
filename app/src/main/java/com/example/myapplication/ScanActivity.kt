@@ -9,6 +9,8 @@ import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.SeekBar
 import android.widget.TextView
+import android.widget.FrameLayout
+import android.widget.ProgressBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.core.view.WindowCompat
@@ -32,17 +34,28 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
+import android.content.SharedPreferences
 
 // Импорты для работы с OpenCV (только для инициализации)
 import org.opencv.android.OpenCVLoader
 import android.util.Log
 
+// Импорты для работы с ML моделью
+import com.example.myapplication.ml.OMRModelManager
+import com.example.myapplication.ml.PredictionResult
+import com.example.myapplication.models.OMRResult
+import kotlinx.coroutines.*
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.Color
+import android.widget.Toast
+
 class ScanActivity : AppCompatActivity() {
     // ===== ПЕРЕМЕННЫЕ ДЛЯ РАБОТЫ С КАМЕРОЙ =====
     private var cameraProvider: ProcessCameraProvider? = null
     private var cameraBound = false
-    private lateinit var previewView: PreviewView
-    private lateinit var resultOverlay: ImageView
+    lateinit var previewView: PreviewView
+    lateinit var resultOverlay: ImageView
     private lateinit var btnStartCamera: Button
     private lateinit var btnStopCamera: Button
     private lateinit var btnHideVideo: Button
@@ -64,7 +77,7 @@ class ScanActivity : AppCompatActivity() {
     // ===== ПЕРЕМЕННЫЕ ДЛЯ РЕЗУЛЬТАТОВ ПРОВЕРКИ =====
     private var lastGrading = mutableListOf<Int>()
     private var lastIncorrectQuestions = mutableListOf<Map<String, Any>>()
-    private var isProcessingEnabled = true
+
     
     // ===== ПЕРЕМЕННЫЕ ДЛЯ УПРАВЛЕНИЯ ПАУЗОЙ =====
     private var isPaused = false
@@ -74,6 +87,84 @@ class ScanActivity : AppCompatActivity() {
     // ===== ПЕРЕМЕННЫЕ ДЛЯ UI МАРКЕРОВ =====
     private lateinit var resultsOverlay: android.widget.FrameLayout
     private var currentSelectedAnswers = IntArray(0)
+
+    // ===== ПАРАМЕТРЫ КАМЕРЫ (UI) =====
+    private var brightness: Int = 0 // -100..+100
+    private var contrast: Int = 100 // 0..200
+    private var saturation: Int = 100 // 0..200
+    private var sharpness: Int = 50 // 0..100
+    
+    // ===== ПЕРЕМЕННЫЕ ДЛЯ РАБОТЫ С ML МОДЕЛЬЮ =====
+    lateinit var omrModelManager: OMRModelManager
+    var isModelReady = false
+    
+    // ===== ПЕРЕМЕННЫЕ ДЛЯ НОВОЙ ЛОГИКИ =====
+    private var isContourFound = false // Найден ли контур бланка
+    private var lastContourBitmap: Bitmap? = null // Последний кадр с найденным контуром
+    private var isMLProcessing = false // Выполняется ли ML обработка
+    private val processingScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+    
+
+    
+    // ===== КОНСТАНТЫ ДЛЯ СОХРАНЕНИЯ =====
+    companion object {
+        private const val PREFS_NAME = "CameraSettings"
+        private const val KEY_BRIGHTNESS = "brightness"
+        private const val KEY_CONTRAST = "contrast"
+        private const val KEY_SATURATION = "saturation"
+        private const val KEY_SHARPNESS = "sharpness"
+        
+        // Значения по умолчанию
+        private const val DEFAULT_BRIGHTNESS = 0
+        private const val DEFAULT_CONTRAST = 100
+        private const val DEFAULT_SATURATION = 100
+        private const val DEFAULT_SHARPNESS = 50
+    }
+    
+    // ===== МЕТОДЫ СОХРАНЕНИЯ/ЗАГРУЗКИ =====
+    private fun saveCameraSettings() {
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        prefs.edit().apply {
+            putInt(KEY_BRIGHTNESS, brightness)
+            putInt(KEY_CONTRAST, contrast)
+            putInt(KEY_SATURATION, saturation)
+            putInt(KEY_SHARPNESS, sharpness)
+            apply()
+        }
+        Log.d("ScanActivity", "💾 Настройки камеры сохранены")
+    }
+    
+    private fun loadCameraSettings() {
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        brightness = prefs.getInt(KEY_BRIGHTNESS, DEFAULT_BRIGHTNESS)
+        contrast = prefs.getInt(KEY_CONTRAST, DEFAULT_CONTRAST)
+        saturation = prefs.getInt(KEY_SATURATION, DEFAULT_SATURATION)
+        sharpness = prefs.getInt(KEY_SHARPNESS, DEFAULT_SHARPNESS)
+        Log.d("ScanActivity", "📂 Настройки камеры загружены")
+    }
+    
+    private fun resetCameraSettings() {
+        brightness = DEFAULT_BRIGHTNESS
+        contrast = DEFAULT_CONTRAST
+        saturation = DEFAULT_SATURATION
+        sharpness = DEFAULT_SHARPNESS
+        
+        // Обновляем UI
+        findViewById<SeekBar>(R.id.seek_brightness)?.progress = brightness + 100
+        findViewById<SeekBar>(R.id.seek_contrast)?.progress = contrast
+        findViewById<SeekBar>(R.id.seek_saturation)?.progress = saturation
+        findViewById<SeekBar>(R.id.seek_sharpness)?.progress = sharpness * 2 // 0..100 -> 0..200
+        
+        findViewById<TextView>(R.id.value_brightness)?.text = brightness.toString()
+        findViewById<TextView>(R.id.value_contrast)?.text = contrast.toString()
+        findViewById<TextView>(R.id.value_saturation)?.text = saturation.toString()
+        findViewById<TextView>(R.id.value_sharpness)?.text = sharpness.toString()
+        
+        // Сохраняем
+        saveCameraSettings()
+        
+        android.widget.Toast.makeText(this, "Настройки сброшены", android.widget.Toast.LENGTH_SHORT).show()
+    }
 
     // ===== ИНИЦИАЛИЗАЦИЯ АКТИВНОСТИ =====
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -91,6 +182,12 @@ class ScanActivity : AppCompatActivity() {
         val controller = WindowInsetsControllerCompat(window, window.decorView)
         controller.hide(WindowInsetsCompat.Type.systemBars())
         controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+
+        // ===== ЗАГРУЗКА СОХРАНЕННЫХ НАСТРОЕК =====
+        loadCameraSettings()
+        
+        // ===== ИНИЦИАЛИЗАЦИЯ ML МОДЕЛИ =====
+        initializeMLModel()
 
         // ===== ИНИЦИАЛИЗАЦИЯ UI ЭЛЕМЕНТОВ =====
         val drawerLayout = findViewById<DrawerLayout>(R.id.drawer_layout)
@@ -146,44 +243,74 @@ class ScanActivity : AppCompatActivity() {
         // Слайдеры настроек камеры
         val seekBrightness = findViewById<SeekBar?>(R.id.seek_brightness)
         val valueBrightness = findViewById<TextView?>(R.id.value_brightness)
+        
+        // Устанавливаем сохраненные значения
+        seekBrightness?.progress = brightness + 100
+        valueBrightness?.text = brightness.toString()
+        
         seekBrightness?.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                // Яркость: от -100 до +100
                 valueBrightness?.text = (progress - 100).toString()
+                brightness = progress - 100
+                if (fromUser) saveCameraSettings()
             }
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
         })
         val seekContrast = findViewById<SeekBar?>(R.id.seek_contrast)
         val valueContrast = findViewById<TextView?>(R.id.value_contrast)
+        
+        // Устанавливаем сохраненные значения
+        seekContrast?.progress = contrast
+        valueContrast?.text = contrast.toString()
+        
         seekContrast?.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                // Контраст: 0..200
                 valueContrast?.text = progress.toString()
+                contrast = progress
+                if (fromUser) saveCameraSettings()
             }
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
         })
         val seekSaturation = findViewById<SeekBar?>(R.id.seek_saturation)
         val valueSaturation = findViewById<TextView?>(R.id.value_saturation)
+        
+        // Устанавливаем сохраненные значения
+        seekSaturation?.progress = saturation
+        valueSaturation?.text = saturation.toString()
+        
         seekSaturation?.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                // Насыщенность: 0..200
                 valueSaturation?.text = progress.toString()
+                saturation = progress
+                if (fromUser) saveCameraSettings()
             }
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
         })
         val seekSharpness = findViewById<SeekBar?>(R.id.seek_sharpness)
         val valueSharpness = findViewById<TextView?>(R.id.value_sharpness)
+        
+        // Устанавливаем сохраненные значения
+        seekSharpness?.progress = sharpness * 2 // 0..100 -> 0..200
+        valueSharpness?.text = sharpness.toString()
+        
         seekSharpness?.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                // Резкость: 0..100
-                valueSharpness?.text = progress.toString()
+                valueSharpness?.text = (progress / 2).toString()
+                sharpness = progress / 2
+                if (fromUser) saveCameraSettings()
             }
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
         })
+
+        // ===== КНОПКА СБРОСА НАСТРОЕК =====
+        val btnResetSettings = findViewById<com.google.android.material.button.MaterialButton>(R.id.btn_reset_camera_settings)
+        btnResetSettings?.setOnClickListener {
+            resetCameraSettings()
+        }
 
         // ===== КНОПКИ УПРАВЛЕНИЯ ПОД ВИДЕОПОТОКОМ =====
         // --- Кнопки управления под видеопотоком ---
@@ -206,35 +333,80 @@ class ScanActivity : AppCompatActivity() {
 
         val btnToggleProcessing = findViewById<com.google.android.material.button.MaterialButton>(R.id.btn_toggle_processing)
         btnToggleProcessing.setOnClickListener {
-            isProcessingEnabled = !isProcessingEnabled
+            // Показываем/скрываем результаты
+            val showResults = resultsOverlay.visibility == View.GONE
+            resultsOverlay.visibility = if (showResults && currentSelectedAnswers.isNotEmpty()) View.VISIBLE else View.GONE
+            
             btnToggleProcessing.setIconResource(
-                if (isProcessingEnabled) R.drawable.ic_check_circle else R.drawable.ic_cancel
+                if (showResults) R.drawable.ic_check_circle else R.drawable.ic_cancel
             )
             btnToggleProcessing.backgroundTintList = android.content.res.ColorStateList.valueOf(
                 resources.getColor(
-                    if (isProcessingEnabled) R.color.success else R.color.error,
+                    if (showResults) R.color.success else R.color.error,
                     theme
                 )
             )
-            btnToggleProcessing.contentDescription = if (isProcessingEnabled) "Выключить проверку" else "Включить проверку"
+            btnToggleProcessing.contentDescription = if (showResults) "Скрыть результаты" else "Показать результаты"
             
-            // Скрываем/показываем маркеры результатов
-            resultsOverlay.visibility = if (isProcessingEnabled && currentSelectedAnswers.isNotEmpty()) View.VISIBLE else View.GONE
-            
-            val message = if (isProcessingEnabled) "Проверка включена" else "Проверка выключена"
+            val message = if (showResults) "Результаты показаны" else "Результаты скрыты"
             android.widget.Toast.makeText(this, message, android.widget.Toast.LENGTH_SHORT).show()
         }
 
         btnUpdateAnswers.setOnClickListener {
-            if (gridManager.updateCorrectAnswers()) {
-                // Включаем обработку после обновления ответов
-                isProcessingEnabled = true
-            }
+            gridManager.updateCorrectAnswers()
+            android.widget.Toast.makeText(this, "Правильные ответы обновлены", android.widget.Toast.LENGTH_SHORT).show()
         }
 
         val btnStopFrame = findViewById<com.google.android.material.button.MaterialButton>(R.id.btn_stop_frame)
+        
+        // Инициализируем кнопку как неактивную (бланк не найден)
+        btnStopFrame.isEnabled = false
+        btnStopFrame.backgroundTintList = android.content.res.ColorStateList.valueOf(
+            resources.getColor(android.R.color.darker_gray, theme)
+        )
+        btnStopFrame.strokeWidth = 2
+        
         btnStopFrame.setOnClickListener {
-            togglePause()
+            if (isPaused) {
+                // Возобновляем видео - сбрасываем все результаты
+                isPaused = false
+                isContourFound = false
+                lastContourBitmap = null
+                currentSelectedAnswers = IntArray(0)
+                
+                // Скрываем результаты и маркеры
+                resultsOverlay.visibility = View.GONE
+                
+                // Меняем иконку кнопки на "пауза" и деактивируем
+                btnStopFrame.setIconResource(R.drawable.stop_frame_button)
+                btnStopFrame.contentDescription = "Остановить кадр и запустить ML обработку"
+                btnStopFrame.isEnabled = false
+                btnStopFrame.backgroundTintList = android.content.res.ColorStateList.valueOf(
+                    resources.getColor(android.R.color.darker_gray, theme)
+                )
+                btnStopFrame.strokeWidth = 2
+                
+                android.widget.Toast.makeText(this, "Поиск возобновлен", android.widget.Toast.LENGTH_SHORT).show()
+            } else if (isMLProcessing) {
+                android.widget.Toast.makeText(this, "ML обработка уже выполняется...", android.widget.Toast.LENGTH_SHORT).show()
+            } else if (isContourFound && lastContourBitmap != null && btnStopFrame.isEnabled) {
+                // Делаем паузу и запускаем ML обработку
+                isPaused = true
+                
+                // Показываем зафиксированный бланк
+                resultOverlay.setImageBitmap(lastContourBitmap)
+                
+                // Используем новый метод для обработки уже готового warp-бланка
+                processWarpedFrameWithML(lastContourBitmap!!)
+                
+                // Меняем иконку кнопки на "возобновить"
+                btnStopFrame.setIconResource(R.drawable.ic_play_arrow)
+                btnStopFrame.contentDescription = "Возобновить поиск"
+                
+                android.widget.Toast.makeText(this, "Кадр зафиксирован, ML обработка началась...", android.widget.Toast.LENGTH_SHORT).show()
+            } else if (!btnStopFrame.isEnabled) {
+                android.widget.Toast.makeText(this, "Контур бланка не найден. Поднесите бланк к камере", android.widget.Toast.LENGTH_SHORT).show()
+            }
         }
 
         val btnAddToReport = findViewById<com.google.android.material.button.MaterialButton>(R.id.btn_add_to_report)
@@ -261,6 +433,8 @@ class ScanActivity : AppCompatActivity() {
         btnCloseCameraSettings.setOnClickListener {
             drawerLayout.closeDrawer(androidx.core.view.GravityCompat.END)
         }
+
+
 
         // --- Кнопки навигации из бокового меню ---
         val btnNavHome = findViewById<com.google.android.material.button.MaterialButton>(R.id.btn_nav_home)
@@ -299,6 +473,10 @@ class ScanActivity : AppCompatActivity() {
             }
         }
 
+        // ===== НАСТРОЙКИ ПРОИЗВОДИТЕЛЬНОСТИ (в правом меню) =====
+        // Эти настройки находятся в правом drawer (drawer_camera_settings.xml)
+        // Обработчики будут добавлены в onCreate после инициализации drawer
+
         // CameraX provider init (но не запуск)
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
         cameraProviderFuture.addListener({
@@ -321,49 +499,66 @@ class ScanActivity : AppCompatActivity() {
                     val rotationDegrees = imageProxy.imageInfo.rotationDegrees.toFloat()
                     val bitmap = imageProcessor.imageProxyToBitmap(imageProxy)
                     val rotatedBitmap = imageProcessor.rotateBitmap(bitmap, rotationDegrees)
-                    // Обработка с помощью нативной OpenCV
-                    val (processedBitmap, omrResult) = imageProcessor.processFrameWithOpenCV(
+                    
+                    // Постоянный поиск контура с помощью OpenCV (быстро)
+                    val (processedBitmap, contourFound) = imageProcessor.processFrameWithOpenCV(
                         rotatedBitmap, 
                         previewView.width, 
                         previewView.height,
                         gridManager.getQuestionsCount(),
                         gridManager.getChoicesCount(),
-                        gridManager.getCorrectAnswers(),
-                        isProcessingEnabled,
+                        emptyList(), // Не передаем правильные ответы для ML обработки
+                        false, // Отключаем ML обработку в основном потоке
                         gridManager.isGridVisible(),
-                        overlayMode
+                        overlayMode,
+                        brightness,
+                        contrast,
+                        saturation,
+                        sharpness
                     )
                     
-                    // Если есть результаты OMR, создаем маркеры
-                    if (omrResult != null && isProcessingEnabled) {
-                        currentSelectedAnswers = omrResult.selectedAnswers
-                        markerRenderer.createUIMarkers(
-                            resultsOverlay,
-                            omrResult.selectedAnswers, 
-                            omrResult.grading, 
-                            omrResult.correctAnswers,
-                            gridManager.getQuestionsCount(),
-                            gridManager.getChoicesCount()
-                        )
-                        updateResultsUI(omrResult.grading, omrResult.incorrectQuestions)
-                    }
-                    
-                    // Сохраняем кадр для паузы
-                    if (isPaused && pausedFrame == null) {
-                        pausedFrame = processedBitmap
+                    // Обновляем состояние контура
+                    if (contourFound && !isContourFound && !isPaused) {
+                        isContourFound = true
+                        // Сохраняем обработанный кадр (с найденным контуром)
+                        lastContourBitmap = processedBitmap.copy(processedBitmap.config ?: Bitmap.Config.ARGB_8888, true)
+                        Log.d("ScanActivity", "🎯 Контур бланка найден! Готов к ML обработке")
+                        
+                        // Активируем и подсвечиваем кнопку
+                        runOnUiThread {
+                            val btnStopFrame = findViewById<com.google.android.material.button.MaterialButton>(R.id.btn_stop_frame)
+                            btnStopFrame.isEnabled = true
+                            // Меняем цвет на более яркий
+                            btnStopFrame.backgroundTintList = android.content.res.ColorStateList.valueOf(
+                                resources.getColor(R.color.success, theme)
+                            )
+                            btnStopFrame.setStrokeColorResource(R.color.text_inverse)
+                            btnStopFrame.strokeWidth = 6
+                            Log.d("ScanActivity", "✨ Кнопка активирована и подсвечена зеленым цветом")
+                        }
+                    } else if (!contourFound && isContourFound && !isPaused) {
+                        isContourFound = false
+                        lastContourBitmap = null
+                        Log.d("ScanActivity", "❌ Контур бланка потерян")
+                        
+                        // Деактивируем кнопку - делаем серой
+                        runOnUiThread {
+                            val btnStopFrame = findViewById<com.google.android.material.button.MaterialButton>(R.id.btn_stop_frame)
+                            btnStopFrame.isEnabled = false
+                            btnStopFrame.backgroundTintList = android.content.res.ColorStateList.valueOf(
+                                resources.getColor(android.R.color.darker_gray, theme)
+                            )
+                            btnStopFrame.setStrokeColorResource(R.color.text_inverse)
+                            btnStopFrame.strokeWidth = 2
+                            Log.d("ScanActivity", "🔴 Кнопка деактивирована и стала серой")
+                        }
                     }
                     
                     runOnUiThread {
                         resultOverlay.setImageBitmap(processedBitmap)
                     }
-                } else {
-                    // В режиме паузы показываем сохраненный кадр
-                    pausedFrame?.let { frame ->
-                        runOnUiThread {
-                            resultOverlay.setImageBitmap(frame)
-                        }
-                    }
                 }
+                // Если на паузе - НЕ обрабатываем кадр вообще, просто закрываем
             } catch (e: Exception) {
                 Log.e("ScanActivity", "Ошибка обработки кадра: ${e.message}", e)
             } finally {
@@ -375,6 +570,324 @@ class ScanActivity : AppCompatActivity() {
         cameraProvider?.bindToLifecycle(this, cameraSelector, preview, imageAnalyzer)
         cameraBound = true
     }
+    
+    /**
+     * Запускает ML обработку уже готового warp-бланка (без поиска контуров)
+     */
+    private fun processWarpedFrameWithML(warpedBitmap: Bitmap) {
+        if (isMLProcessing) return
+        
+        isMLProcessing = true
+        Log.d("ScanActivity", "🚀 Начинаем ML обработку warp-бланка...")
+        
+        // Показываем прогресс-бар
+        runOnUiThread {
+            findViewById<FrameLayout>(R.id.ml_progress_container).visibility = View.VISIBLE
+            findViewById<ProgressBar>(R.id.ml_progress_bar).progress = 0
+            findViewById<TextView>(R.id.ml_progress_text).text = "Подготовка warp-бланка..."
+        }
+        
+        processingScope.launch {
+            try {
+                val startTime = System.currentTimeMillis()
+                
+                // Обновляем прогресс - warp-бланк готов
+                withContext(Dispatchers.Main) {
+                    findViewById<ProgressBar>(R.id.ml_progress_bar).progress = 40
+                    findViewById<TextView>(R.id.ml_progress_text).text = "Warp-бланк готов, начинаем ML анализ..."
+                }
+                
+                // Небольшая задержка для визуализации
+                kotlinx.coroutines.delay(300)
+                
+                // Обновляем прогресс - ML обработка
+                withContext(Dispatchers.Main) {
+                    findViewById<ProgressBar>(R.id.ml_progress_bar).progress = 60
+                    findViewById<TextView>(R.id.ml_progress_text).text = "ML анализ ячеек..."
+                }
+                
+                val omrResult = imageProcessor.processWarpedFrameWithML(
+                    warpedBitmap,
+                    gridManager.getQuestionsCount(),
+                    gridManager.getChoicesCount(),
+                    gridManager.getCorrectAnswers()
+                ) { question, choice, isFilled ->
+                    // Callback для обновления UI по мере обработки ячеек
+                    runOnUiThread {
+                        val correctAnswers = gridManager.getCorrectAnswers()
+                        val isReferenceCell = question < correctAnswers.size && choice == correctAnswers[question]
+                        
+                        if (isReferenceCell) {
+                            // Эталонная ячейка - показываем прогресс этапа 1
+                            val progress = 60 + (question * 30 / gridManager.getQuestionsCount())
+                            findViewById<ProgressBar>(R.id.ml_progress_bar).progress = progress
+                            findViewById<TextView>(R.id.ml_progress_text).text = 
+                                "🎯 Эталонная ячейка ${question + 1}..."
+                            
+                            // СРАЗУ показываем результат для эталонной ячейки
+                            val tempSelectedAnswers = IntArray(gridManager.getQuestionsCount()) { 0 }
+                            tempSelectedAnswers[question] = if (isFilled) choice else 0
+                            
+                            val tempGrading = IntArray(gridManager.getQuestionsCount()) { 0 }
+                            if (question < correctAnswers.size) {
+                                tempGrading[question] = if (tempSelectedAnswers[question] == correctAnswers[question]) 1 else 0
+                            }
+                            
+                            // Показываем маркеры для этой ячейки
+                            markerRenderer.createUIMarkers(
+                                resultsOverlay,
+                                tempSelectedAnswers,
+                                tempGrading,
+                                correctAnswers,
+                                gridManager.getQuestionsCount(),
+                                gridManager.getChoicesCount()
+                            )
+                            
+                            Log.d("ScanActivity", "🎯 Мгновенный результат для эталонной ячейки [$question][$choice]")
+                            
+                        } else {
+                            // Фоновая ячейка - показываем прогресс этапа 3
+                            val progress = 90 + (question * 10 / gridManager.getQuestionsCount())
+                            findViewById<ProgressBar>(R.id.ml_progress_bar).progress = progress
+                            findViewById<TextView>(R.id.ml_progress_text).text = 
+                                "🔍 Проверка ошибок: ячейка ${question + 1}-${choice + 1}..."
+                            
+                            // Показываем маркеры для фоновых ячеек
+                            val tempSelectedAnswers = IntArray(gridManager.getQuestionsCount()) { 0 }
+                            tempSelectedAnswers[question] = if (isFilled) choice else 0
+                            
+                            val tempGrading = IntArray(gridManager.getQuestionsCount()) { 0 }
+                            if (question < correctAnswers.size) {
+                                tempGrading[question] = if (tempSelectedAnswers[question] == correctAnswers[question]) 1 else 0
+                            }
+                            
+                            markerRenderer.createUIMarkers(
+                                resultsOverlay,
+                                tempSelectedAnswers,
+                                tempGrading,
+                                correctAnswers,
+                                gridManager.getQuestionsCount(),
+                                gridManager.getChoicesCount()
+                            )
+                            
+                            Log.d("ScanActivity", "🔍 Фоновый результат для ячейки [$question][$choice]")
+                        }
+                    }
+                }
+                
+                val processingTime = System.currentTimeMillis() - startTime
+                
+                // Обновляем прогресс - завершение
+                withContext(Dispatchers.Main) {
+                    findViewById<ProgressBar>(R.id.ml_progress_bar).progress = 100
+                    findViewById<TextView>(R.id.ml_progress_text).text = "Завершение..."
+                }
+                
+                // Небольшая задержка для визуализации
+                kotlinx.coroutines.delay(300)
+                
+                if (omrResult != null) {
+                    Log.d("ScanActivity", "✅ ML обработка warp-бланка завершена за ${processingTime}мс")
+                    
+                    // Обновляем UI в главном потоке
+                    withContext(Dispatchers.Main) {
+                        updateUIWithResult(omrResult)
+                        findViewById<FrameLayout>(R.id.ml_progress_container).visibility = View.GONE
+                        android.widget.Toast.makeText(this@ScanActivity, "Обработка завершена за ${processingTime}мс", android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    Log.d("ScanActivity", "⚠️ ML обработка warp-бланка завершена за ${processingTime}мс, но результат пустой")
+                    withContext(Dispatchers.Main) {
+                        findViewById<FrameLayout>(R.id.ml_progress_container).visibility = View.GONE
+                        android.widget.Toast.makeText(this@ScanActivity, "Обработка завершена, но результат не найден", android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("ScanActivity", "❌ Ошибка ML обработки warp-бланка: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    findViewById<FrameLayout>(R.id.ml_progress_container).visibility = View.GONE
+                    android.widget.Toast.makeText(this@ScanActivity, "Ошибка обработки: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
+                }
+            } finally {
+                isMLProcessing = false
+            }
+        }
+    }
+
+    /**
+     * Запускает ML обработку кадра (старый метод - для совместимости)
+     */
+    private fun processFrameWithML(bitmap: Bitmap) {
+        if (isMLProcessing) return
+        
+        isMLProcessing = true
+        Log.d("ScanActivity", "🚀 Начинаем ML обработку кадра...")
+        
+        // Показываем прогресс-бар
+        runOnUiThread {
+            findViewById<FrameLayout>(R.id.ml_progress_container).visibility = View.VISIBLE
+            findViewById<ProgressBar>(R.id.ml_progress_bar).progress = 0
+            findViewById<TextView>(R.id.ml_progress_text).text = "Подготовка..."
+        }
+        
+        processingScope.launch {
+            try {
+                val startTime = System.currentTimeMillis()
+                
+                // Обновляем прогресс - поиск контура
+                withContext(Dispatchers.Main) {
+                    findViewById<ProgressBar>(R.id.ml_progress_bar).progress = 20
+                    findViewById<TextView>(R.id.ml_progress_text).text = "Поиск контура бланка..."
+                }
+                
+                // Небольшая задержка для визуализации
+                kotlinx.coroutines.delay(500)
+                
+                // Обновляем прогресс - ML обработка
+                withContext(Dispatchers.Main) {
+                    findViewById<ProgressBar>(R.id.ml_progress_bar).progress = 40
+                    findViewById<TextView>(R.id.ml_progress_text).text = "ML анализ ячеек..."
+                }
+                
+                val omrResult = imageProcessor.processFrameWithML(
+                    bitmap,
+                    gridManager.getQuestionsCount(),
+                    gridManager.getChoicesCount(),
+                    gridManager.getCorrectAnswers()
+                ) { question, choice, isFilled ->
+                    // Callback для обновления UI по мере обработки ячеек
+                    runOnUiThread {
+                        val correctAnswers = gridManager.getCorrectAnswers()
+                        val isReferenceCell = question < correctAnswers.size && choice == correctAnswers[question]
+                        
+                        if (isReferenceCell) {
+                            // Эталонная ячейка - показываем прогресс этапа 1
+                            val progress = 40 + (question * 60 / gridManager.getQuestionsCount())
+                            findViewById<ProgressBar>(R.id.ml_progress_bar).progress = progress
+                            findViewById<TextView>(R.id.ml_progress_text).text = 
+                                "🎯 Эталонная ячейка ${question + 1}..."
+                            
+                            // СРАЗУ показываем результат для эталонной ячейки
+                            val tempSelectedAnswers = IntArray(gridManager.getQuestionsCount()) { 0 }
+                            tempSelectedAnswers[question] = if (isFilled) choice else 0
+                            
+                            val tempGrading = IntArray(gridManager.getQuestionsCount()) { 0 }
+                            if (question < correctAnswers.size) {
+                                tempGrading[question] = if (tempSelectedAnswers[question] == correctAnswers[question]) 1 else 0
+                            }
+                            
+                            // Показываем маркеры для этой ячейки
+                            markerRenderer.createUIMarkers(
+                                resultsOverlay,
+                                tempSelectedAnswers,
+                                tempGrading,
+                                correctAnswers,
+                                gridManager.getQuestionsCount(),
+                                gridManager.getChoicesCount()
+                            )
+                            
+                            Log.d("ScanActivity", "🎯 Мгновенный результат для эталонной ячейки [$question][$choice]")
+                            
+                        } else {
+                            // Фоновая ячейка - показываем прогресс этапа 3
+                            val progress = 80 + (question * 20 / gridManager.getQuestionsCount())
+                            findViewById<ProgressBar>(R.id.ml_progress_bar).progress = progress
+                            findViewById<TextView>(R.id.ml_progress_text).text = 
+                                "🔍 Проверка ошибок: ячейка ${question + 1}-${choice + 1}..."
+                            
+                            // Показываем маркеры для фоновых ячеек
+                            val tempSelectedAnswers = IntArray(gridManager.getQuestionsCount()) { 0 }
+                            tempSelectedAnswers[question] = if (isFilled) choice else 0
+                            
+                            val tempGrading = IntArray(gridManager.getQuestionsCount()) { 0 }
+                            if (question < correctAnswers.size) {
+                                tempGrading[question] = if (tempSelectedAnswers[question] == correctAnswers[question]) 1 else 0
+                            }
+                            
+                            markerRenderer.createUIMarkers(
+                                resultsOverlay,
+                                tempSelectedAnswers,
+                                tempGrading,
+                                correctAnswers,
+                                gridManager.getQuestionsCount(),
+                                gridManager.getChoicesCount()
+                            )
+                            
+                            Log.d("ScanActivity", "🔍 Фоновый результат для ячейки [$question][$choice]")
+                        }
+                    }
+                }
+                
+                val processingTime = System.currentTimeMillis() - startTime
+                
+                // Обновляем прогресс - завершение
+                withContext(Dispatchers.Main) {
+                    findViewById<ProgressBar>(R.id.ml_progress_bar).progress = 100
+                    findViewById<TextView>(R.id.ml_progress_text).text = "Завершение..."
+                }
+                
+                // Небольшая задержка для визуализации
+                kotlinx.coroutines.delay(300)
+                
+                if (omrResult != null) {
+                    Log.d("ScanActivity", "✅ ML обработка завершена за ${processingTime}мс")
+                    
+                    // Обновляем UI в главном потоке
+                    withContext(Dispatchers.Main) {
+                        updateUIWithResult(omrResult)
+                        findViewById<FrameLayout>(R.id.ml_progress_container).visibility = View.GONE
+                        android.widget.Toast.makeText(this@ScanActivity, "Обработка завершена за ${processingTime}мс", android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    Log.d("ScanActivity", "⚠️ ML обработка завершена за ${processingTime}мс, но результат пустой")
+                    withContext(Dispatchers.Main) {
+                        findViewById<FrameLayout>(R.id.ml_progress_container).visibility = View.GONE
+                        android.widget.Toast.makeText(this@ScanActivity, "Обработка завершена, но результат не найден", android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("ScanActivity", "❌ Ошибка ML обработки: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    findViewById<FrameLayout>(R.id.ml_progress_container).visibility = View.GONE
+                    android.widget.Toast.makeText(this@ScanActivity, "Ошибка обработки: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
+                }
+            } finally {
+                isMLProcessing = false
+            }
+        }
+    }
+    
+
+    
+
+    
+    /**
+     * Обновляет UI с результатами обработки
+     */
+        private fun updateUIWithResult(omrResult: OMRResult) {
+        currentSelectedAnswers = omrResult.selectedAnswers
+
+        // Сохраняем результаты для отчета
+        lastGrading.clear()
+        lastGrading.addAll(omrResult.grading.toList())
+        lastIncorrectQuestions.clear()
+        lastIncorrectQuestions.addAll(omrResult.incorrectQuestions)
+
+        markerRenderer.createUIMarkers(
+            resultsOverlay,
+            omrResult.selectedAnswers,
+            omrResult.grading,
+            omrResult.correctAnswers,
+            gridManager.getQuestionsCount(),
+            gridManager.getChoicesCount()
+        )
+        updateResultsUI(omrResult.grading, omrResult.incorrectQuestions)
+        
+        // Показываем результаты только если не на паузе
+        if (!isPaused) {
+            resultsOverlay.visibility = View.VISIBLE
+        }
+    }
 
     private fun stopCamera() {
         cameraProvider?.unbindAll()
@@ -382,9 +895,9 @@ class ScanActivity : AppCompatActivity() {
     }
 
     // ===== ИСПОЛЬЗОВАНИЕ МОДУЛЕЙ =====
-    private val imageProcessor = com.example.myapplication.processing.ImageProcessor()
+    val imageProcessor = com.example.myapplication.processing.ImageProcessor()
     private lateinit var markerRenderer: com.example.myapplication.ui.MarkerRenderer
-    private lateinit var gridManager: com.example.myapplication.ui.GridManager
+    lateinit var gridManager: com.example.myapplication.ui.GridManager
     
 
     
@@ -411,32 +924,7 @@ class ScanActivity : AppCompatActivity() {
         }
     }
     
-    private fun togglePause() {
-        isPaused = !isPaused
-        
-        val btnStopFrame = findViewById<com.google.android.material.button.MaterialButton>(R.id.btn_stop_frame)
-        val btnAddToReport = findViewById<com.google.android.material.button.MaterialButton>(R.id.btn_add_to_report)
-        
-        if (isPaused) {
-            // Включаем паузу
-            btnStopFrame.setIconResource(R.drawable.ic_play_arrow)
-            btnStopFrame.contentDescription = "Возобновить видео"
-            btnAddToReport.isEnabled = true // Активируем кнопку добавления в отчет
-            
-            android.widget.Toast.makeText(this, "Видео поставлено на паузу", android.widget.Toast.LENGTH_SHORT).show()
-        } else {
-            // Выключаем паузу
-            btnStopFrame.setIconResource(R.drawable.stop_frame_button)
-            btnStopFrame.contentDescription = "Остановить кадр"
-            btnAddToReport.isEnabled = false // Деактивируем кнопку добавления в отчет
-            
-            // Очищаем сохраненный кадр
-            pausedFrame = null
-            pausedResult = null
-            
-            android.widget.Toast.makeText(this, "Видео возобновлено", android.widget.Toast.LENGTH_SHORT).show()
-        }
-    }
+
     
     private fun addToReport() {
         if (pausedResult != null && lastGrading.isNotEmpty()) {
@@ -453,7 +941,42 @@ class ScanActivity : AppCompatActivity() {
         }
     }
 
-
+    /**
+     * Инициализирует ML модель
+     */
+    private fun initializeMLModel() {
+        Log.d("ScanActivity", "🔧 Начинаем инициализацию ML модели")
+        
+        try {
+            Log.d("ScanActivity", "📦 Создаем OMRModelManager")
+            omrModelManager = OMRModelManager(this)
+            
+            // Проверяем готовность модели
+            Log.d("ScanActivity", "🔍 Проверяем готовность модели")
+            if (omrModelManager.isModelReady()) {
+                isModelReady = true
+                Log.i("ScanActivity", "✅ ML модель инициализирована успешно")
+                Toast.makeText(this, "ML модель загружена", Toast.LENGTH_SHORT).show()
+                
+                // Передаем ML модель в ImageProcessor
+                Log.d("ScanActivity", "🔗 Передаем ML модель в ImageProcessor")
+                imageProcessor.setMLModel(omrModelManager)
+                
+                // Показываем информацию о модели
+                Log.i("ScanActivity", omrModelManager.getModelInfo())
+            } else {
+                isModelReady = false
+                Log.e("ScanActivity", "❌ ML модель не загружена")
+                Toast.makeText(this, "Ошибка загрузки ML модели", Toast.LENGTH_LONG).show()
+            }
+        } catch (e: Exception) {
+            isModelReady = false
+            Log.e("ScanActivity", "❌ Ошибка инициализации ML модели: ${e.message}")
+            Toast.makeText(this, "Ошибка инициализации ML модели", Toast.LENGTH_LONG).show()
+        }
+        
+        Log.d("ScanActivity", "🏁 Инициализация ML модели завершена: isModelReady=$isModelReady")
+    }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
@@ -464,7 +987,24 @@ class ScanActivity : AppCompatActivity() {
         }
     }
     
-
-    
-
+    /**
+     * Освобождает ресурсы
+     */
+    override fun onDestroy() {
+        super.onDestroy()
+        
+        // Отменяем все корутины
+        processingScope.cancel()
+        
+        // Освобождаем ресурсы ML модели
+        if (::omrModelManager.isInitialized) {
+            omrModelManager.release()
+        }
+        
+        // Очищаем кэш
+        lastContourBitmap?.recycle()
+        lastContourBitmap = null
+        pausedFrame?.recycle()
+        pausedFrame = null
+    }
 } 

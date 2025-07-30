@@ -36,6 +36,15 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+    
+    packaging {
+        jniLibs {
+            pickFirsts.add("lib/arm64-v8a/libc++_shared.so")
+            pickFirsts.add("lib/armeabi-v7a/libc++_shared.so")
+            pickFirsts.add("lib/x86/libc++_shared.so")
+            pickFirsts.add("lib/x86_64/libc++_shared.so")
+        }
+    }
 }
 
 dependencies {
@@ -52,4 +61,16 @@ dependencies {
     
     // Нативная OpenCV из sdk
     implementation(project(":sdk"))
+    
+    // PyTorch Mobile для работы с ML моделью
+    implementation("org.pytorch:pytorch_android:1.13.1")
+    implementation("org.pytorch:pytorch_android_torchvision:1.13.1")
+    
+        // ONNX Runtime для работы с ONNX моделями (включает NNAPI, OpenVINO, CUDA)
+    implementation("com.microsoft.onnxruntime:onnxruntime-android:1.16.3")
+
+    // TensorFlow Lite для работы с TFLite моделями
+    implementation("org.tensorflow:tensorflow-lite:2.14.0")
+    implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
+    implementation("org.tensorflow:tensorflow-lite-metadata:0.4.4")
 }

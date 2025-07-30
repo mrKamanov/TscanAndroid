@@ -1,0 +1,25 @@
+{
+  "model_name": "OMR_TFLite_Dummy",
+  "version": "1.0",
+  "input_size": [
+    224,
+    224,
+    3
+  ],
+  "num_classes": 2,
+  "class_names": [
+    "empty",
+    "filled"
+  ],
+  "mean": [
+    0.485,
+    0.456,
+    0.406
+  ],
+  "std": [
+    0.229,
+    0.224,
+    0.225
+  ],
+  "confidence_threshold": 0.8
+}
