@@ -90,7 +90,7 @@ class ImageProcessor {
         correctAnswers: List<Int> = emptyList(),
         isProcessingEnabled: Boolean = true,
         isGridVisible: Boolean = false,
-        overlayMode: Boolean = false,
+
         brightness: Int = 0, // -100..+100
         contrast: Int = 100, // 0..200
         saturation: Int = 100, // 0..200
@@ -183,38 +183,22 @@ class ImageProcessor {
                     drawGridOnWarp(warp, questionsCount, choicesCount)
                 }
                 
-                if (overlayMode) {
-                    // В режиме overlay показываем исходный кадр с выделенным контуром бланка
-                    val contourMat = inputMat.clone()
-                    Imgproc.drawContours(contourMat, listOf(pageContour), 0, org.opencv.core.Scalar(0.0, 255.0, 0.0), 3)
-                    contourMat.copyTo(inputMat)
-                    contourMat.release()
-                } else {
-                    // Показываем обработанный warp-бланк
-                    val resizedWarp = Mat()
-                    Imgproc.resize(warp, resizedWarp, Size(inputWidth.toDouble(), inputHeight.toDouble()))
-                    resizedWarp.copyTo(inputMat)
-                    resizedWarp.release()
-                }
+                // Показываем обработанный warp-бланк
+                val resizedWarp = Mat()
+                Imgproc.resize(warp, resizedWarp, Size(inputWidth.toDouble(), inputHeight.toDouble()))
+                resizedWarp.copyTo(inputMat)
+                resizedWarp.release()
             } else {
                 // Рисуем сетку на warp-бланке если включена
                 if (isGridVisible) {
                     drawGridOnWarp(warp, questionsCount, choicesCount)
                 }
 
-                if (overlayMode) {
-                    // В режиме overlay показываем исходный кадр с выделенным контуром бланка
-                    val contourMat = inputMat.clone()
-                    Imgproc.drawContours(contourMat, listOf(pageContour), 0, org.opencv.core.Scalar(0.0, 255.0, 0.0), 3)
-                    contourMat.copyTo(inputMat)
-                    contourMat.release()
-                } else {
-                    // Показываем только warp-бланк, но масштабируем до размеров входного изображения
-                    val resizedWarp = Mat()
-                    Imgproc.resize(warp, resizedWarp, Size(inputWidth.toDouble(), inputHeight.toDouble()))
-                    resizedWarp.copyTo(inputMat)
-                    resizedWarp.release()
-                }
+                // Показываем только warp-бланк, но масштабируем до размеров входного изображения
+                val resizedWarp = Mat()
+                Imgproc.resize(warp, resizedWarp, Size(inputWidth.toDouble(), inputHeight.toDouble()))
+                resizedWarp.copyTo(inputMat)
+                resizedWarp.release()
             }
             warp.release()
             srcMat.release()

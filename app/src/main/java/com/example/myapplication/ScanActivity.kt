@@ -67,7 +67,7 @@ class ScanActivity : AppCompatActivity() {
                 android.widget.Toast.makeText(this, "Требуется разрешение на камеру", android.widget.Toast.LENGTH_SHORT).show()
             }
         }
-    private var overlayMode = false
+
     
     // ===== ПЕРЕМЕННЫЕ ДЛЯ РАБОТЫ С СЕТКОЙ ОТВЕТОВ =====
     private lateinit var gridOverlay: android.widget.LinearLayout
@@ -97,6 +97,9 @@ class ScanActivity : AppCompatActivity() {
     // ===== ПЕРЕМЕННЫЕ ДЛЯ РАБОТЫ С ML МОДЕЛЬЮ =====
     lateinit var omrModelManager: OMRModelManager
     var isModelReady = false
+    
+    // ===== ПЕРЕМЕННЫЕ ДЛЯ РАБОТЫ С ОТЧЕТАМИ =====
+    private lateinit var reportsManager: com.example.myapplication.reports.ReportsManager
     
     // ===== ПЕРЕМЕННЫЕ ДЛЯ НОВОЙ ЛОГИКИ =====
     private var isContourFound = false // Найден ли контур бланка
@@ -217,6 +220,13 @@ class ScanActivity : AppCompatActivity() {
         // Создание начальной сетки
         gridManager.createAnswersGrid()
 
+        // ===== ИНИЦИАЛИЗАЦИЯ ТЕКСТА РЕЗУЛЬТАТОВ =====
+        val scanResultsTextView = findViewById<TextView>(R.id.scan_results)
+        scanResultsTextView?.text = android.text.Html.fromHtml("📋 <b>Ожидание результатов проверки...</b>", android.text.Html.FROM_HTML_MODE_COMPACT)
+
+        // ===== ИНИЦИАЛИЗАЦИЯ МЕНЕДЖЕРА ОТЧЕТОВ =====
+        reportsManager = com.example.myapplication.reports.ReportsManager(this)
+
         // ===== ОБРАБОТЧИКИ КНОПОК УПРАВЛЕНИЯ КАМЕРОЙ =====
         btnStartCamera.setOnClickListener {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
@@ -316,7 +326,7 @@ class ScanActivity : AppCompatActivity() {
         // --- Кнопки управления под видеопотоком ---
         val btnToggleGrid = findViewById<com.google.android.material.button.MaterialButton>(R.id.btn_toggle_grid)
         val btnUpdateAnswers = findViewById<com.google.android.material.button.MaterialButton>(R.id.btn_update_answers)
-        val btnOverlayMode = findViewById<com.google.android.material.button.MaterialButton>(R.id.btn_overlay_mode)
+
 
         btnToggleGrid.setOnClickListener {
             val newVisibility = !gridManager.isGridVisible()
@@ -355,6 +365,12 @@ class ScanActivity : AppCompatActivity() {
         btnUpdateAnswers.setOnClickListener {
             gridManager.updateCorrectAnswers()
             android.widget.Toast.makeText(this, "Правильные ответы обновлены", android.widget.Toast.LENGTH_SHORT).show()
+            
+            // Сбрасываем результаты при обновлении ответов
+            findViewById<TextView>(R.id.scan_results)?.text = android.text.Html.fromHtml("📋 <b>Ожидание результатов проверки...</b>", android.text.Html.FROM_HTML_MODE_COMPACT)
+            
+            // Деактивируем кнопку добавления в отчет
+            findViewById<com.google.android.material.button.MaterialButton>(R.id.btn_add_to_report)?.isEnabled = false
         }
 
         val btnStopFrame = findViewById<com.google.android.material.button.MaterialButton>(R.id.btn_stop_frame)
@@ -376,6 +392,12 @@ class ScanActivity : AppCompatActivity() {
                 
                 // Скрываем результаты и маркеры
                 resultsOverlay.visibility = View.GONE
+                
+                // Сбрасываем текст результатов
+                findViewById<TextView>(R.id.scan_results)?.text = android.text.Html.fromHtml("📋 <b>Ожидание результатов проверки...</b>", android.text.Html.FROM_HTML_MODE_COMPACT)
+                
+                // Деактивируем кнопку добавления в отчет
+                findViewById<com.google.android.material.button.MaterialButton>(R.id.btn_add_to_report)?.isEnabled = false
                 
                 // Меняем иконку кнопки на "пауза" и деактивируем
                 btnStopFrame.setIconResource(R.drawable.stop_frame_button)
@@ -417,15 +439,7 @@ class ScanActivity : AppCompatActivity() {
 
 
 
-        btnOverlayMode.setOnClickListener {
-            overlayMode = !overlayMode
-            btnOverlayMode.setIconResource(
-                if (overlayMode) R.drawable.ic_toggle_on else R.drawable.ic_layers
-            )
-            
-            // Скрываем маркеры результатов при переключении режимов
-            resultsOverlay.visibility = View.GONE
-        }
+
 
         btnCameraSettings.setOnClickListener {
             drawerLayout.openDrawer(androidx.core.view.GravityCompat.END)
@@ -510,7 +524,7 @@ class ScanActivity : AppCompatActivity() {
                         emptyList(), // Не передаем правильные ответы для ML обработки
                         false, // Отключаем ML обработку в основном потоке
                         gridManager.isGridVisible(),
-                        overlayMode,
+
                         brightness,
                         contrast,
                         saturation,
@@ -865,6 +879,7 @@ class ScanActivity : AppCompatActivity() {
      * Обновляет UI с результатами обработки
      */
         private fun updateUIWithResult(omrResult: OMRResult) {
+        Log.d("ScanActivity", "🔄 Обновляем UI с результатами: ${omrResult.grading.contentToString()}")
         currentSelectedAnswers = omrResult.selectedAnswers
 
         // Сохраняем результаты для отчета
@@ -887,6 +902,9 @@ class ScanActivity : AppCompatActivity() {
         if (!isPaused) {
             resultsOverlay.visibility = View.VISIBLE
         }
+        
+        // Активируем кнопку добавления в отчет
+        findViewById<com.google.android.material.button.MaterialButton>(R.id.btn_add_to_report)?.isEnabled = true
     }
 
     private fun stopCamera() {
@@ -908,35 +926,90 @@ class ScanActivity : AppCompatActivity() {
     // ===== МЕТОДЫ УПРАВЛЕНИЯ ПАУЗОЙ И ОТЧЕТАМИ =====
     private fun updateResultsUI(grading: IntArray, incorrectQuestions: List<Map<String, Any>>) {
         runOnUiThread {
-            val correctCount = grading.sum()
-            val questionsCount = gridManager.getQuestionsCount()
-            val score = if (questionsCount > 0) (correctCount.toFloat() / questionsCount) * 100 else 0f
+            try {
+                Log.d("ScanActivity", "Обновляем UI результатов: grading=${grading.contentToString()}, incorrectQuestions=$incorrectQuestions")
+                
+                val correctCount = grading.sum()
+                val questionsCount = gridManager.getQuestionsCount()
+                val score = if (questionsCount > 0) (correctCount.toFloat() / questionsCount) * 100 else 0f
             
-            // Обновляем текст результата (если есть TextView для этого)
-            val resultText = "Результат: $correctCount/$questionsCount (${String.format("%.1f", score)}%)"
-            Log.d("ScanActivity", resultText)
+            // Создаем краткий текст результатов
+            val resultText = buildString {
+                appendLine("📊 <b>Краткие результаты</b>")
+                appendLine()
+                appendLine("✅ Правильных ответов: <b>$correctCount из $questionsCount</b>")
+                appendLine("📈 Процент выполнения: <b>${String.format("%.1f", score)}%</b>")
+                appendLine()
+                appendLine("💡 Нажмите 'Добавить в отчет' для подробной информации")
+            }
+            
+            // Обновляем TextView с результатами (поддерживает HTML)
+            findViewById<TextView>(R.id.scan_results)?.text = android.text.Html.fromHtml(resultText, android.text.Html.FROM_HTML_MODE_COMPACT)
             
             // Сохраняем результат для паузы
             pausedResult = resultText
             
-            // Можно добавить TextView для отображения результатов
-            // findViewById<TextView>(R.id.result_text)?.text = resultText
+            Log.d("ScanActivity", "Результаты обновлены: $correctCount/$questionsCount (${String.format("%.1f", score)}%)")
+            } catch (e: Exception) {
+                Log.e("ScanActivity", "Ошибка обновления UI результатов: ${e.message}", e)
+                // Показываем базовую информацию об ошибке
+                findViewById<TextView>(R.id.scan_results)?.text = android.text.Html.fromHtml(
+                    "❌ <b>Ошибка отображения результатов</b><br/>Попробуйте еще раз", 
+                    android.text.Html.FROM_HTML_MODE_COMPACT
+                )
+            }
         }
     }
     
 
     
     private fun addToReport() {
-        if (pausedResult != null && lastGrading.isNotEmpty()) {
-            // Здесь можно добавить логику сохранения в отчет
-            // Пока просто показываем уведомление
-            android.widget.Toast.makeText(this, "Результат добавлен в отчет: $pausedResult", android.widget.Toast.LENGTH_LONG).show()
-            
-            // Можно добавить сохранение в SharedPreferences или базу данных
-            Log.d("ScanActivity", "Добавлен в отчет: $pausedResult")
-            Log.d("ScanActivity", "Оценки: $lastGrading")
-            Log.d("ScanActivity", "Неправильные вопросы: $lastIncorrectQuestions")
+        Log.d("ScanActivity", "🔍 Попытка добавления в отчет...")
+        Log.d("ScanActivity", "lastGrading.size: ${lastGrading.size}, currentSelectedAnswers.size: ${currentSelectedAnswers.size}")
+        
+        if (lastGrading.isNotEmpty() && currentSelectedAnswers.isNotEmpty()) {
+            try {
+                // Создаем OMRResult из текущих данных
+                val omrResult = OMRResult(
+                    selectedAnswers = currentSelectedAnswers,
+                    grading = lastGrading.toIntArray(),
+                    incorrectQuestions = lastIncorrectQuestions,
+                    correctAnswers = gridManager.getCorrectAnswers().toList()
+                )
+                
+                // Генерируем название работы
+                val workNumber = reportsManager.getReports().size + 1
+                val title = "Работа $workNumber"
+                
+                Log.d("ScanActivity", "📋 Создаем отчет: $title")
+                Log.d("ScanActivity", "selectedAnswers: ${currentSelectedAnswers.contentToString()}")
+                Log.d("ScanActivity", "grading: ${lastGrading.toIntArray().contentToString()}")
+                Log.d("ScanActivity", "correctAnswers: ${gridManager.getCorrectAnswers().toList()}")
+                
+                // Добавляем в отчет
+                val report = reportsManager.addReport(omrResult, title)
+                
+                // Принудительно сохраняем
+                reportsManager.forceSave()
+                
+                android.widget.Toast.makeText(
+                    this, 
+                    "✅ Результат добавлен в отчет: $title", 
+                    android.widget.Toast.LENGTH_LONG
+                ).show()
+                
+                Log.d("ScanActivity", "📋 Добавлен в отчет: $title (оценка: ${report.grade})")
+                
+            } catch (e: Exception) {
+                Log.e("ScanActivity", "❌ Ошибка добавления в отчет: ${e.message}", e)
+                android.widget.Toast.makeText(
+                    this, 
+                    "❌ Ошибка добавления в отчет: ${e.message}", 
+                    android.widget.Toast.LENGTH_LONG
+                ).show()
+            }
         } else {
+            Log.w("ScanActivity", "❌ Нет результатов для добавления в отчет")
             android.widget.Toast.makeText(this, "Нет результатов для добавления в отчет", android.widget.Toast.LENGTH_SHORT).show()
         }
     }

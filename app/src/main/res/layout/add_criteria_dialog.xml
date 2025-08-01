@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/menu_card_bg"
+    android:padding="24dp">
+
+    <!-- Заголовок -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="20dp">
+
+        <ImageView
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_build"
+            android:tint="@color/primary"
+            android:layout_marginEnd="12dp" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Новые критерии"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="@color/text"
+            android:fontFamily="@font/krabuler" />
+    </LinearLayout>
+
+    <!-- Название критериев -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Название:"
+        android:textColor="@color/text"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp" />
+
+    <EditText
+        android:id="@+id/et_criteria_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Например: Школьная система"
+        android:textColor="@color/text"
+        android:textColorHint="@color/text_secondary"
+        android:background="@drawable/menu_card_bg"
+        android:padding="12dp"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Тип критериев -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Тип критериев:"
+        android:textColor="@color/text"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp" />
+
+    <RadioGroup
+        android:id="@+id/rg_criteria_type"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp">
+
+        <RadioButton
+            android:id="@+id/rb_percentage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="По процентам"
+            android:textColor="@color/text"
+            android:checked="true"
+            android:layout_marginBottom="8dp" />
+
+        <RadioButton
+            android:id="@+id/rb_points"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="По баллам"
+            android:textColor="@color/text" />
+
+    </RadioGroup>
+
+    <!-- Контейнер для настроек -->
+    <LinearLayout
+        android:id="@+id/criteria_settings_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginBottom="20dp">
+
+        <!-- Заголовок настроек -->
+        <TextView
+            android:id="@+id/tv_settings_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Настройки по процентам:"
+            android:textColor="@color/text"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp" />
+
+        <!-- Оценка 5 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:layout_width="60dp"
+                android:layout_height="wrap_content"
+                android:text="Оценка 5:"
+                android:textColor="@color/text"
+                android:textSize="14sp" />
+
+            <EditText
+                android:id="@+id/et_grade_5_min"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="90"
+                android:inputType="number"
+                android:textColor="@color/text"
+                android:textColorHint="@color/text_secondary"
+                android:background="@drawable/menu_card_bg"
+                android:padding="8dp"
+                android:layout_marginEnd="8dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="% - 100%"
+                android:textColor="@color/text_secondary"
+                android:textSize="14sp" />
+
+        </LinearLayout>
+
+        <!-- Оценка 4 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:layout_width="60dp"
+                android:layout_height="wrap_content"
+                android:text="Оценка 4:"
+                android:textColor="@color/text"
+                android:textSize="14sp" />
+
+            <EditText
+                android:id="@+id/et_grade_4_min"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="75"
+                android:inputType="number"
+                android:textColor="@color/text"
+                android:textColorHint="@color/text_secondary"
+                android:background="@drawable/menu_card_bg"
+                android:padding="8dp"
+                android:layout_marginEnd="8dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="% - 89%"
+                android:textColor="@color/text_secondary"
+                android:textSize="14sp" />
+
+        </LinearLayout>
+
+        <!-- Оценка 3 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:layout_width="60dp"
+                android:layout_height="wrap_content"
+                android:text="Оценка 3:"
+                android:textColor="@color/text"
+                android:textSize="14sp" />
+
+            <EditText
+                android:id="@+id/et_grade_3_min"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="51"
+                android:inputType="number"
+                android:textColor="@color/text"
+                android:textColorHint="@color/text_secondary"
+                android:background="@drawable/menu_card_bg"
+                android:padding="8dp"
+                android:layout_marginEnd="8dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="% - 74%"
+                android:textColor="@color/text_secondary"
+                android:textSize="14sp" />
+
+        </LinearLayout>
+
+        <!-- Оценка 2 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:layout_width="60dp"
+                android:layout_height="wrap_content"
+                android:text="Оценка 2:"
+                android:textColor="@color/text"
+                android:textSize="14sp" />
+
+            <EditText
+                android:id="@+id/et_grade_2_min"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="0"
+                android:inputType="number"
+                android:textColor="@color/text"
+                android:textColorHint="@color/text_secondary"
+                android:background="@drawable/menu_card_bg"
+                android:padding="8dp"
+                android:layout_marginEnd="8dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="% - 50%"
+                android:textColor="@color/text_secondary"
+                android:textSize="14sp" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Кнопки -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="end">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_cancel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Отмена"
+            android:textColor="@color/text"
+            android:backgroundTint="@color/surface"
+            app:cornerRadius="12dp"
+            android:layout_marginEnd="8dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_save"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Сохранить"
+            android:textColor="@color/text_inverse"
+            android:backgroundTint="@color/primary"
+            app:cornerRadius="12dp" />
+
+    </LinearLayout>
+
+</LinearLayout> 

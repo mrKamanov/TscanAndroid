@@ -14,6 +14,7 @@
     <color name="background">#2E3440</color>
     <color name="surface">#3B4252</color>
     <color name="text">#ECEFF4</color>
+    <color name="text_secondary">#D8DEE9</color>
     <color name="text_inverse">#FFFFFF</color>
     <color name="error">#BF616A</color>
     <color name="success">#A3BE8C</color>

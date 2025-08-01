@@ -18,7 +18,7 @@
     <string name="add_to_report_button">Добавить в отчёт</string>
     <string name="toggle_grid_button">Показать/скрыть сетку</string>
     <string name="update_answers_button">Обновить ответы</string>
-    <string name="overlay_mode_button">Режим наложения</string>
+
     <string name="close_settings_button">Закрыть</string>
     <string name="brightness_label">Яркость</string>
     <string name="contrast_label">Контраст</string>
