@@ -1,303 +1,310 @@
 package com.example.myapplication
 
+import android.content.Intent
+import android.net.Uri
+import android.os.Environment
+import androidx.core.content.FileProvider
 import android.os.Bundle
+import android.util.Log
 import android.view.View
+import android.widget.*
 import android.widget.Button
-import android.widget.EditText
-import android.widget.ImageButton
-import android.widget.LinearLayout
 import android.widget.RadioButton
 import android.widget.RadioGroup
-import android.widget.TextView
+import android.widget.EditText
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.GravityCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.reports.ReportsManager
-import android.util.Log
-import android.widget.Toast
-import androidx.core.view.GravityCompat
+import com.example.myapplication.reports.StatisticsAdapter
+import com.example.myapplication.reports.ReportsManager.GradingCriteria
+import com.example.myapplication.reports.ReportsManager.CriteriaType
+import com.google.android.material.navigation.NavigationView
+import com.example.myapplication.reports.ExcelExporter
+import java.io.File
+import android.view.LayoutInflater
 
 class ReportsActivity : AppCompatActivity() {
     
     private lateinit var reportsManager: ReportsManager
     private lateinit var reportsAdapter: ReportsAdapter
-    private lateinit var recyclerView: RecyclerView
-    private lateinit var emptyStateText: TextView
+    private lateinit var statisticsAdapter: StatisticsAdapter
+    private lateinit var drawerLayout: DrawerLayout
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_reports)
 
-        // Инициализация менеджера отчетов
+        // Полноэкранный режим
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        val controller = WindowInsetsControllerCompat(window, window.decorView)
+        controller.hide(WindowInsetsCompat.Type.systemBars())
+        controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+
         reportsManager = ReportsManager(this)
-        
-        // Настройка UI
         setupUI()
         setupDrawer()
         setupRecyclerView()
         loadReports()
+        loadStatistics()
     }
     
     private fun setupUI() {
-        recyclerView = findViewById(R.id.reportsRecyclerView)
-        emptyStateText = findViewById(R.id.empty_state_text)
-        
-        // Кнопка сброса отчетов
-        findViewById<Button>(R.id.btn_reset_reports).setOnClickListener {
-            showResetReportsDialog()
-        }
-        
-        // Кнопка критериев в боковом меню
-        findViewById<Button>(R.id.btn_criteria_settings_drawer).setOnClickListener {
-            showCriteriaSettingsDialog()
-        }
-        
-        // Кнопка добавления новых критериев
-        findViewById<Button>(R.id.btn_add_criteria).setOnClickListener {
-            showAddCriteriaDialog()
-        }
-        
-        // Обновляем текст текущих критериев
-        updateCurrentCriteriaText()
+        drawerLayout = findViewById(R.id.drawer_layout_reports)
+        // Убираем настройку кнопок, так как они удалены из layout
     }
     
     private fun setupDrawer() {
-        val drawerLayout = findViewById<DrawerLayout>(R.id.drawer_layout_reports)
-        val btnMenu = findViewById<ImageButton>(R.id.btn_menu_reports)
+        setupCriteriaSettings()
+        setupDrawerButtons()
+    }
+    
+    private fun setupCriteriaSettings() {
+        val rbPercentages = findViewById<RadioButton>(R.id.rb_percentages)
+        val rbGrades = findViewById<RadioButton>(R.id.rb_grades)
+        val etGrade5 = findViewById<EditText>(R.id.et_grade_5)
+        val etGrade4 = findViewById<EditText>(R.id.et_grade_4)
+        val etGrade3 = findViewById<EditText>(R.id.et_grade_3)
+        val etGrade2 = findViewById<EditText>(R.id.et_grade_2)
         
-        btnMenu.setOnClickListener {
-            drawerLayout.openDrawer(GravityCompat.START)
+        // Загружаем текущие настройки
+        loadCriteriaSettings()
+        
+        // Обработчик переключения режима
+        rbPercentages.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                updateUnitLabels("%")
+                updateDefaultValues(true)
+            }
+        }
+        
+        rbGrades.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                updateUnitLabels("балл")
+                updateDefaultValues(false)
+            }
+        }
+    }
+    
+    private fun setupDrawerButtons() {
+        // Кнопка "Применить"
+        findViewById<Button>(R.id.btn_apply_criteria).setOnClickListener {
+            applyCriteriaSettings()
+            drawerLayout.closeDrawer(GravityCompat.START)
+            Toast.makeText(this, "✅ Настройки применены", Toast.LENGTH_SHORT).show()
+        }
+        
+        // Кнопка "Экспорт в Excel"
+        findViewById<Button>(R.id.btn_export_excel).setOnClickListener {
+            exportToExcel()
+            drawerLayout.closeDrawer(GravityCompat.START)
+        }
+        
+        // Кнопка "Сбросить отчеты"
+        findViewById<Button>(R.id.btn_reset_reports).setOnClickListener {
+            showResetReportsDialog()
+            drawerLayout.closeDrawer(GravityCompat.START)
         }
     }
     
     private fun setupRecyclerView() {
-        reportsAdapter = ReportsAdapter(
-            reports = emptyList(),
-            onReportClick = { report -> showReportDetails(report) },
-            onReportDelete = { report -> deleteReport(report) }
-        )
+        val recyclerView = findViewById<RecyclerView>(R.id.reportsRecyclerView)
+        val statisticsRecyclerView = findViewById<RecyclerView>(R.id.statistics_recycler_view)
         
+        // Настройка списка отчетов
+        reportsAdapter = ReportsAdapter()
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = reportsAdapter
+
+        reportsAdapter.setOnItemClickListener { report ->
+            showReportDetails(report)
+        }
+
+        reportsAdapter.setOnDeleteClickListener { report ->
+            deleteReport(report)
+        }
+
+        // Настройка инфографики
+        statisticsAdapter = StatisticsAdapter()
+        statisticsRecyclerView.layoutManager = LinearLayoutManager(this)
+        statisticsRecyclerView.adapter = statisticsAdapter
     }
     
     private fun loadReports() {
         val reports = reportsManager.getReports()
+        reportsAdapter.updateReports(reports)
         
+        val emptyStateText = findViewById<TextView>(R.id.empty_state_text)
         if (reports.isEmpty()) {
-            recyclerView.visibility = View.GONE
             emptyStateText.visibility = View.VISIBLE
-            emptyStateText.text = "📋 Отчеты отсутствуют\n\nДобавьте результаты проверки в окне сканирования"
         } else {
-            recyclerView.visibility = View.VISIBLE
             emptyStateText.visibility = View.GONE
-            reportsAdapter.updateReports(reports)
         }
         
-        Log.d("ReportsActivity", "📂 Загружено ${reports.size} отчетов")
+        updateCurrentCriteriaText()
+    }
+
+    private fun loadStatistics() {
+        Log.d("ReportsActivity", "📊 loadStatistics() вызван")
+        val statistics = reportsManager.getStatistics()
+        Log.d("ReportsActivity", "📊 Статистика получена: ${statistics.size} элементов")
+        Log.d("ReportsActivity", "📊 Тепловая карта: ${(statistics["questionHeatmap"] as? List<*>)?.size ?: 0} элементов")
+        statisticsAdapter.updateStatistics(statistics)
+        Log.d("ReportsActivity", "📊 Статистика обновлена в адаптере")
     }
     
     private fun showReportDetails(report: ReportsManager.Report) {
-        val dialog = AlertDialog.Builder(this, R.style.CustomAlertDialog)
-            .create()
-        
         val dialogView = layoutInflater.inflate(R.layout.report_details_dialog, null)
-        dialog.setView(dialogView)
         
         // Заполняем данные
-        dialogView.findViewById<TextView>(R.id.dialog_title).text = report.title
-        dialogView.findViewById<TextView>(R.id.dialog_date).text = report.date
+        dialogView.findViewById<TextView>(R.id.tv_report_title).text = report.title
+        dialogView.findViewById<TextView>(R.id.tv_report_date).text = "Дата: ${report.date}"
         
-        val omrResult = report.omrResult
-        val correctCount = omrResult.grading.sum()
-        val questionsCount = omrResult.grading.size
-        val incorrectCount = questionsCount - correctCount
-        val percentage = if (questionsCount > 0) (correctCount.toFloat() / questionsCount) * 100 else 0f
+        val correctCount = report.omrResult.grading.sum()
+        val totalCount = report.omrResult.grading.size
+        val incorrectCount = totalCount - correctCount
+        val percentage = if (totalCount > 0) (correctCount.toFloat() / totalCount) * 100 else 0f
         
-        Log.d("ReportsActivity", "📊 Статистика отчета: correctCount=$correctCount, questionsCount=$questionsCount, incorrectCount=$incorrectCount")
-        Log.d("ReportsActivity", "📊 Grading: ${omrResult.grading.contentToString()}")
-        Log.d("ReportsActivity", "📊 SelectedAnswers: ${omrResult.selectedAnswers.contentToString()}")
-        Log.d("ReportsActivity", "📊 CorrectAnswers: ${omrResult.correctAnswers}")
+        dialogView.findViewById<TextView>(R.id.tv_correct_answers).text = "$correctCount из $totalCount"
+        dialogView.findViewById<TextView>(R.id.tv_incorrect_answers).text = incorrectCount.toString()
+        dialogView.findViewById<TextView>(R.id.tv_percentage).text = "${String.format("%.1f", percentage)}%"
+        dialogView.findViewById<TextView>(R.id.tv_grade).text = "Оценка ${report.grade}"
         
-        dialogView.findViewById<TextView>(R.id.correct_answers).text = correctCount.toString()
-        dialogView.findViewById<TextView>(R.id.incorrect_answers).text = incorrectCount.toString()
-        dialogView.findViewById<TextView>(R.id.completion_percentage).text = "${String.format("%.1f", percentage)}%"
-        dialogView.findViewById<TextView>(R.id.grade).text = report.grade.toString()
-        
-        // Настраиваем цвет оценки
-        val gradeColor = when (report.grade) {
-            5 -> resources.getColor(R.color.success, theme)
-            4 -> resources.getColor(R.color.info, theme)
-            3 -> resources.getColor(R.color.warning, theme)
-            2 -> resources.getColor(R.color.error, theme)
-            else -> resources.getColor(R.color.text_secondary, theme)
-        }
-        dialogView.findViewById<TextView>(R.id.grade).setTextColor(gradeColor)
-        
-        // Заполняем ошибки
+        // Обработка ошибок
         val errorsContainer = dialogView.findViewById<LinearLayout>(R.id.errors_container)
-        val errorsCard = dialogView.findViewById<androidx.cardview.widget.CardView>(R.id.errors_card)
+        errorsContainer.removeAllViews()
         
-        Log.d("ReportsActivity", "🔍 Обрабатываем ошибки: ${omrResult.incorrectQuestions.size} ошибок")
-        Log.d("ReportsActivity", "🔍 Данные ошибок: ${omrResult.incorrectQuestions}")
-        
-        // Создаем правильный список ошибок на основе grading
         val actualErrors = mutableListOf<Map<String, Any>>()
-        
-        omrResult.grading.forEachIndexed { index, isCorrect ->
-            if (isCorrect == 0) { // Неправильный ответ
-                val questionNumber = index + 1
-                val selectedAnswer = (omrResult.selectedAnswers.getOrNull(index) ?: 0) + 1  // +1 для пользователя
-                val correctAnswer = (omrResult.correctAnswers.getOrNull(index) ?: 0) + 1   // +1 для пользователя
-                
-                Log.d("ReportsActivity", "🔍 Найдена ошибка: Вопрос $questionNumber (индекс $index), выбран $selectedAnswer, правильный $correctAnswer")
-                
+        report.omrResult.grading.forEachIndexed { index, isCorrect ->
+            if (isCorrect == 0) {
+                val selectedAnswer = report.omrResult.selectedAnswers[index]
+                val correctAnswer = report.omrResult.correctAnswers[index]
                 actualErrors.add(mapOf(
-                    "question" to questionNumber,
-                    "selected" to selectedAnswer,
-                    "correct" to correctAnswer
+                    "question_number" to (index + 1),
+                    "selected_answer" to (selectedAnswer + 1),
+                    "correct_answer" to (correctAnswer + 1)
                 ))
             }
         }
         
-        Log.d("ReportsActivity", "🔍 Найдено ${actualErrors.size} реальных ошибок")
-        
-        if (actualErrors.isNotEmpty()) {
-            errorsContainer.removeAllViews()
-            
-            actualErrors.forEach { error ->
-                try {
-                    val questionNumber = error["question"] as? Int ?: 0
-                    val selectedAnswer = error["selected"] as? Int ?: 0  // Уже +1 в ImageProcessor
-                    val correctAnswer = error["correct"] as? Int ?: 0    // Уже +1 в ImageProcessor
-                    
-                    val errorView = TextView(this).apply {
-                        text = "Вопрос $questionNumber: ответ $selectedAnswer, правильный $correctAnswer"
-                        setTextColor(resources.getColor(R.color.text, theme))
-                        textSize = 14f
-                        setPadding(0, 8, 0, 8)
-                    }
-                    errorsContainer.addView(errorView)
-                    
-                    Log.d("ReportsActivity", "✅ Добавлена ошибка: Вопрос $questionNumber (ответ $selectedAnswer, правильный $correctAnswer)")
-                } catch (e: Exception) {
-                    Log.e("ReportsActivity", "❌ Ошибка обработки данных ошибки: ${e.message}")
-                    val errorView = TextView(this).apply {
-                        text = "Вопрос: ошибка обработки данных"
-                        setTextColor(resources.getColor(R.color.error, theme))
-                        textSize = 14f
-                        setPadding(0, 8, 0, 8)
-                    }
-                    errorsContainer.addView(errorView)
-                }
-            }
-        } else {
-            // Показываем сообщение об отсутствии ошибок
-            errorsContainer.removeAllViews()
+        if (actualErrors.isEmpty()) {
             val noErrorsView = TextView(this).apply {
-                text = "🎉 Все ответы правильные!"
-                setTextColor(resources.getColor(R.color.success, theme))
+                text = "✅ Все ответы правильные!"
+                setTextColor(android.graphics.Color.parseColor("#4CAF50"))
                 textSize = 14f
                 setPadding(0, 8, 0, 8)
-                textAlignment = View.TEXT_ALIGNMENT_CENTER
             }
             errorsContainer.addView(noErrorsView)
+        } else {
+            actualErrors.forEach { error ->
+                val errorView = TextView(this).apply {
+                    text = "Вопрос ${error["question_number"]}: выбрано ${error["selected_answer"]}, верно ${error["correct_answer"]}"
+                    setTextColor(android.graphics.Color.parseColor("#FF6B6B"))
+                    textSize = 14f
+                    setPadding(0, 8, 0, 8)
+                }
+                errorsContainer.addView(errorView)
+            }
         }
         
+        val dialog = AlertDialog.Builder(this, R.style.CustomAlertDialog)
+            .setView(dialogView)
+            .setCancelable(true)
+            .create()
+        
         // Кнопка закрытия
-        dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btn_close).setOnClickListener {
+        dialogView.findViewById<Button>(R.id.btn_close).setOnClickListener {
             dialog.dismiss()
         }
         
         dialog.show()
     }
     
-
-    
     private fun deleteReport(report: ReportsManager.Report) {
         AlertDialog.Builder(this)
             .setTitle("Удаление отчета")
             .setMessage("Вы уверены, что хотите удалить отчет '${report.title}'?")
             .setPositiveButton("Удалить") { _, _ ->
-                if (reportsManager.deleteReport(report.id)) {
+                reportsManager.deleteReport(report.id)
+                loadReports()
+                loadStatistics()
                     Toast.makeText(this, "Отчет удален", Toast.LENGTH_SHORT).show()
-                    loadReports()
-                } else {
-                    Toast.makeText(this, "Ошибка удаления отчета", Toast.LENGTH_SHORT).show()
-                }
             }
             .setNegativeButton("Отмена", null)
             .show()
     }
     
     private fun showCriteriaSettingsDialog() {
-        val criteria = reportsManager.getCriteriaList()
+        val dialogView = layoutInflater.inflate(R.layout.criteria_settings_dialog, null)
+        val criteriaContainer = dialogView.findViewById<LinearLayout>(R.id.criteria_container)
         val currentCriteria = reportsManager.getCurrentCriteria()
         
+        // Создаем диалог заранее
         val dialog = AlertDialog.Builder(this, R.style.CustomAlertDialog)
+            .setView(dialogView)
+            .setCancelable(true)
             .create()
         
-        val dialogView = layoutInflater.inflate(R.layout.criteria_settings_dialog, null)
-        dialog.setView(dialogView)
-        
-        // Заполняем список критериев
-        val criteriaContainer = dialogView.findViewById<LinearLayout>(R.id.criteria_container)
         criteriaContainer.removeAllViews()
         
-        criteria.forEach { criterion ->
-            val criteriaItem = layoutInflater.inflate(R.layout.criteria_item, criteriaContainer, false)
+        reportsManager.getCriteriaList().forEach { criteria ->
+            val criteriaView = layoutInflater.inflate(R.layout.criteria_item, criteriaContainer, false)
             
-            criteriaItem.findViewById<TextView>(R.id.criteria_name).text = criterion.name
-            criteriaItem.findViewById<TextView>(R.id.criteria_type).text = when (criterion.type) {
-                ReportsManager.CriteriaType.PERCENTAGE -> "По процентам"
-                ReportsManager.CriteriaType.POINTS -> "По баллам"
-            }
+            criteriaView.findViewById<TextView>(R.id.tv_criteria_name).text = criteria.name
+            criteriaView.findViewById<TextView>(R.id.tv_criteria_type).text = 
+                if (criteria.type == ReportsManager.CriteriaType.PERCENTAGE) "По процентам" else "По баллам"
             
-            // Показываем текущий критерий
-            if (criterion.id == currentCriteria?.id) {
-                criteriaItem.findViewById<TextView>(R.id.current_indicator).visibility = View.VISIBLE
-                criteriaItem.setBackgroundResource(R.drawable.menu_card_bg)
+            val currentIndicator = criteriaView.findViewById<TextView>(R.id.current_indicator)
+            if (criteria.id == currentCriteria?.id) {
+                currentIndicator.text = "✓"
+                currentIndicator.setTextColor(android.graphics.Color.parseColor("#4CAF50"))
+                currentIndicator.visibility = View.VISIBLE
             } else {
-                criteriaItem.findViewById<TextView>(R.id.current_indicator).visibility = View.GONE
+                currentIndicator.visibility = View.GONE
             }
             
-            // Обработчик выбора критерия
-            criteriaItem.setOnClickListener {
-                reportsManager.setCurrentCriteria(criterion.id)
-                Toast.makeText(this, "Критерии изменены: ${criterion.name}", Toast.LENGTH_SHORT).show()
-                updateCurrentCriteriaText() // Обновляем текст в боковом меню
-                loadReports() // Перезагружаем для обновления оценок
+            criteriaView.setOnClickListener {
+                reportsManager.setCurrentCriteria(criteria.id)
+                reportsManager.recalculateAllGrades()
+                loadReports()
+                loadStatistics()
+                updateCurrentCriteriaText()
+                Toast.makeText(this, "Критерии изменены", Toast.LENGTH_SHORT).show()
                 dialog.dismiss()
             }
             
-            criteriaContainer.addView(criteriaItem)
+            criteriaContainer.addView(criteriaView)
         }
         
-        // Кнопка удаления критериев
-        dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btn_delete_criteria).setOnClickListener {
-            val currentCriteria = reportsManager.getCurrentCriteria()
-            if (currentCriteria != null && currentCriteria.name != "По процентам (по умолчанию)") {
-                AlertDialog.Builder(this)
-                    .setTitle("Удаление критериев")
-                    .setMessage("Вы уверены, что хотите удалить критерии '${currentCriteria.name}'?")
-                    .setPositiveButton("Удалить") { _, _ ->
-                        reportsManager.deleteCriteria(currentCriteria.id)
-                        Toast.makeText(this, "Критерии удалены", Toast.LENGTH_SHORT).show()
-                        updateCurrentCriteriaText()
-                        loadReports() // Пересчитываем оценки
-                        dialog.dismiss()
-                    }
-                    .setNegativeButton("Отмена", null)
-                    .show()
+        // Кнопка удаления (только для не-дефолтных критериев)
+        val btnDelete = dialogView.findViewById<Button>(R.id.btn_delete_criteria)
+        btnDelete.setOnClickListener {
+            val nonDefaultCriteria = reportsManager.getCriteriaList().filter { it.id != "default" }
+            if (nonDefaultCriteria.isNotEmpty()) {
+                val criteriaToDelete = nonDefaultCriteria.first()
+                val success = reportsManager.deleteCriteria(criteriaToDelete.id)
+                if (success) {
+                    loadReports()
+                    loadStatistics()
+                    updateCurrentCriteriaText()
+                    Toast.makeText(this, "Критерии удалены", Toast.LENGTH_SHORT).show()
+                    dialog.dismiss()
+                } else {
+                    Toast.makeText(this, "Не удалось удалить критерии", Toast.LENGTH_SHORT).show()
+                }
             } else {
-                Toast.makeText(this, "Нельзя удалить критерии по умолчанию", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Нет критериев для удаления", Toast.LENGTH_SHORT).show()
             }
         }
         
         // Кнопка закрытия
-        dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btn_close_criteria).setOnClickListener {
+        dialogView.findViewById<Button>(R.id.btn_close).setOnClickListener {
             dialog.dismiss()
         }
         
@@ -305,126 +312,454 @@ class ReportsActivity : AppCompatActivity() {
     }
     
     private fun showAddCriteriaDialog() {
-        val dialog = AlertDialog.Builder(this, R.style.CustomAlertDialog)
-            .create()
-        
         val dialogView = layoutInflater.inflate(R.layout.add_criteria_dialog, null)
-        dialog.setView(dialogView)
         
-        // Получаем элементы UI
-        val etCriteriaName = dialogView.findViewById<EditText>(R.id.et_criteria_name)
+        val etName = dialogView.findViewById<EditText>(R.id.et_criteria_name)
         val rgCriteriaType = dialogView.findViewById<RadioGroup>(R.id.rg_criteria_type)
-        val rbPercentage = dialogView.findViewById<RadioButton>(R.id.rb_percentage)
-        val rbPoints = dialogView.findViewById<RadioButton>(R.id.rb_points)
-        val tvSettingsTitle = dialogView.findViewById<TextView>(R.id.tv_settings_title)
-        val etGrade5Min = dialogView.findViewById<EditText>(R.id.et_grade_5_min)
-        val etGrade4Min = dialogView.findViewById<EditText>(R.id.et_grade_4_min)
-        val etGrade3Min = dialogView.findViewById<EditText>(R.id.et_grade_3_min)
-        val etGrade2Min = dialogView.findViewById<EditText>(R.id.et_grade_2_min)
+        val etGrade5 = dialogView.findViewById<EditText>(R.id.et_grade_5)
+        val etGrade4 = dialogView.findViewById<EditText>(R.id.et_grade_4)
+        val etGrade3 = dialogView.findViewById<EditText>(R.id.et_grade_3)
+        val etGrade2 = dialogView.findViewById<EditText>(R.id.et_grade_2)
         
-        // Обработчик переключения типа критериев
+        // Устанавливаем значения по умолчанию
+        etGrade5.setText("90")
+        etGrade4.setText("75")
+        etGrade3.setText("51")
+        etGrade2.setText("0")
+        
+        // Обработчик изменения типа критериев
         rgCriteriaType.setOnCheckedChangeListener { group, checkedId ->
-            when (checkedId) {
-                R.id.rb_percentage -> {
-                    tvSettingsTitle.text = "Настройки по процентам:"
-                    etGrade5Min.hint = "90"
-                    etGrade4Min.hint = "75"
-                    etGrade3Min.hint = "51"
-                    etGrade2Min.hint = "0"
-                }
-                R.id.rb_points -> {
-                    tvSettingsTitle.text = "Настройки по баллам:"
-                    etGrade5Min.hint = "18"
-                    etGrade4Min.hint = "15"
-                    etGrade3Min.hint = "10"
-                    etGrade2Min.hint = "0"
-                }
-            }
+            val isPercentage = checkedId == R.id.rb_percentage
+            val hint = if (isPercentage) "Минимальный процент для оценки" else "Минимальные баллы для оценки"
+            etGrade5.hint = hint
+            etGrade4.hint = hint
+            etGrade3.hint = hint
+            etGrade2.hint = hint
         }
         
+        val dialog = AlertDialog.Builder(this, R.style.CustomAlertDialog)
+            .setView(dialogView)
+            .setCancelable(true)
+            .create()
+        
         // Кнопка отмены
-        dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btn_cancel).setOnClickListener {
+        dialogView.findViewById<Button>(R.id.btn_cancel).setOnClickListener {
             dialog.dismiss()
         }
         
         // Кнопка сохранения
-        dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btn_save).setOnClickListener {
-            val name = etCriteriaName.text.toString().trim()
-            if (name.isEmpty()) {
-                Toast.makeText(this, "Введите название критериев", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-            
-            val type = if (rbPercentage.isChecked) ReportsManager.CriteriaType.PERCENTAGE else ReportsManager.CriteriaType.POINTS
-            
-            try {
-                val grade5Min = etGrade5Min.text.toString().toDoubleOrNull() ?: 0.0
-                val grade4Min = etGrade4Min.text.toString().toDoubleOrNull() ?: 0.0
-                val grade3Min = etGrade3Min.text.toString().toDoubleOrNull() ?: 0.0
-                val grade2Min = etGrade2Min.text.toString().toDoubleOrNull() ?: 0.0
+        dialogView.findViewById<Button>(R.id.btn_save).setOnClickListener {
+            val name = etName.text.toString()
+            if (name.isNotEmpty()) {
+                val isPercentage = rgCriteriaType.checkedRadioButtonId == R.id.rb_percentage
+                val type = if (isPercentage) ReportsManager.CriteriaType.PERCENTAGE else ReportsManager.CriteriaType.POINTS
                 
-                // Создаем критерии
+                val grade5Value = etGrade5.text.toString().toDoubleOrNull() ?: 0.0
+                val grade4Value = etGrade4.text.toString().toDoubleOrNull() ?: 0.0
+                val grade3Value = etGrade3.text.toString().toDoubleOrNull() ?: 0.0
+                val grade2Value = etGrade2.text.toString().toDoubleOrNull() ?: 0.0
+                
+                // Создаем правильную структуру критериев с диапазонами
                 val criteria = mutableMapOf<Int, ClosedRange<Double>>()
-                criteria[5] = grade5Min..100.0
-                criteria[4] = grade4Min..(grade5Min - 0.1)
-                criteria[3] = grade3Min..(grade4Min - 0.1)
-                criteria[2] = grade2Min..(grade3Min - 0.1)
+                if (isPercentage) {
+                    criteria[5] = grade5Value..100.0
+                    criteria[4] = grade4Value..(grade5Value - 0.1)
+                    criteria[3] = grade3Value..(grade4Value - 0.1)
+                    criteria[2] = grade2Value..(grade3Value - 0.1)
+                } else {
+                    val maxPoints = maxOf(grade5Value, grade4Value, grade3Value, grade2Value)
+                    criteria[5] = grade5Value..maxPoints
+                    criteria[4] = grade4Value..(grade5Value - 0.1)
+                    criteria[3] = grade3Value..(grade4Value - 0.1)
+                    criteria[2] = grade2Value..(grade3Value - 0.1)
+                }
                 
                 val newCriteria = ReportsManager.GradingCriteria(
-                    id = System.currentTimeMillis().toString(),
+                    id = java.util.UUID.randomUUID().toString(),
                     name = name,
                     type = type,
                     criteria = criteria,
-                    maxPoints = if (type == ReportsManager.CriteriaType.POINTS) 20 else 0
+                    maxPoints = if (isPercentage) 100 else maxOf(grade5Value, grade4Value, grade3Value, grade2Value).toInt()
                 )
                 
                 reportsManager.addCriteria(newCriteria)
                 reportsManager.setCurrentCriteria(newCriteria.id)
-                
-                Toast.makeText(this, "Критерии '$name' добавлены", Toast.LENGTH_SHORT).show()
+                reportsManager.recalculateAllGrades()
+                loadReports()
+                loadStatistics()
                 updateCurrentCriteriaText()
-                loadReports() // Пересчитываем оценки
+                Toast.makeText(this, "Новые критерии добавлены", Toast.LENGTH_SHORT).show()
                 dialog.dismiss()
-                
-            } catch (e: Exception) {
-                Toast.makeText(this, "Ошибка при создании критериев: ${e.message}", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "Введите название критериев", Toast.LENGTH_SHORT).show()
             }
         }
         
         dialog.show()
     }
-    
-    private fun showResetReportsDialog() {
-        AlertDialog.Builder(this)
-            .setTitle("Сброс всех отчетов")
-            .setMessage("Вы уверены, что хотите удалить ВСЕ отчеты? Это действие нельзя отменить.")
-            .setPositiveButton("Удалить все") { _, _ ->
-                // Удаляем все отчеты
-                val reports = reportsManager.getReports()
-                reports.forEach { report ->
-                    reportsManager.deleteReport(report.id)
-                }
-                Toast.makeText(this, "Все отчеты удалены", Toast.LENGTH_SHORT).show()
-                loadReports()
-            }
-            .setNegativeButton("Отмена", null)
-            .show()
-    }
-    
+
+
+
     private fun updateCurrentCriteriaText() {
         val currentCriteria = reportsManager.getCurrentCriteria()
-        val criteriaText = findViewById<TextView>(R.id.current_criteria_text)
-        
-        if (currentCriteria != null) {
-            criteriaText.text = currentCriteria.name
-        } else {
-            criteriaText.text = "Не выбрано"
-        }
+        // Убираем обновление текста, так как элемент удален из layout
     }
     
     override fun onResume() {
         super.onResume()
-        loadReports() // Обновляем при возвращении в активность
-        updateCurrentCriteriaText()
+        loadReports()
+        loadStatistics()
+    }
+
+    /**
+     * Экспортирует отчеты в Excel файл
+     */
+    private fun exportToExcel() {
+        try {
+            // Показываем красивый индикатор загрузки
+            val progressDialog = createProgressDialog()
+            progressDialog.show()
+            
+            // Запускаем экспорт в фоновом потоке
+            Thread {
+                try {
+                    val excelExporter = ExcelExporter(this)
+                    val file = excelExporter.exportToExcel(reportsManager)
+                    
+                    runOnUiThread {
+                        progressDialog.dismiss()
+                        
+                        if (file != null) {
+                            // Показываем красивый диалог успеха
+                            showExportSuccessDialog(file)
+                        } else {
+                            Toast.makeText(this, "❌ Ошибка при создании Excel файла", Toast.LENGTH_LONG).show()
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e("ReportsActivity", "Ошибка при экспорте в Excel", e)
+                    runOnUiThread {
+                        progressDialog.dismiss()
+                        Toast.makeText(this, "❌ Ошибка: ${e.message}", Toast.LENGTH_LONG).show()
+                    }
+                }
+            }.start()
+            
+        } catch (e: Exception) {
+            Log.e("ReportsActivity", "Ошибка при запуске экспорта", e)
+            Toast.makeText(this, "❌ Ошибка: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+    }
+    
+    /**
+     * Создает красивый диалог загрузки
+     */
+    private fun createProgressDialog(): AlertDialog {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.progress_dialog, null)
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .setCancelable(false)
+            .create()
+        
+        // Убираем белые углы
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        
+        return dialog
+    }
+    
+    /**
+     * Открывает Excel файл в другом приложении
+     */
+    private fun openExcelFile(file: File) {
+        try {
+            val uri = FileProvider.getUriForFile(
+                this,
+                "${applicationContext.packageName}.fileprovider",
+                file
+            )
+            
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            
+            if (intent.resolveActivity(packageManager) != null) {
+                startActivity(intent)
+            } else {
+                Toast.makeText(this, "Нет приложения для открытия Excel файлов", Toast.LENGTH_LONG).show()
+            }
+        } catch (e: Exception) {
+            Log.e("ReportsActivity", "Ошибка при открытии файла", e)
+            Toast.makeText(this, "Ошибка при открытии файла", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun showExportSuccessDialog(file: File) {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.export_success_dialog, null)
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .setCancelable(false)
+            .create()
+        
+        // Убираем белые углы
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        
+        // Настраиваем информацию о файле
+        val tvFileInfo = dialogView.findViewById<TextView>(R.id.tv_file_info)
+        tvFileInfo.text = "Файл: ${file.name}\nСохранен в папке 'Загрузки'"
+        
+        // Кнопка "Открыть папку"
+        dialogView.findViewById<Button>(R.id.btn_open_file).setOnClickListener {
+            dialog.dismiss()
+            openFileLocation(file)
+        }
+        
+        // Кнопка "Отправить"
+        dialogView.findViewById<Button>(R.id.btn_share_file).setOnClickListener {
+            dialog.dismiss()
+            shareExcelFile(file)
+        }
+        
+        // Кнопка "Закрыть"
+        dialogView.findViewById<Button>(R.id.btn_close).setOnClickListener {
+            dialog.dismiss()
+        }
+        
+        dialog.show()
+    }
+    
+    /**
+     * Отправляет Excel файл через другие приложения
+     */
+    private fun shareExcelFile(file: File) {
+        try {
+            val uri = FileProvider.getUriForFile(
+                this,
+                "${applicationContext.packageName}.fileprovider",
+                file
+            )
+            
+            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                putExtra(Intent.EXTRA_SUBJECT, "OMR Отчет")
+                putExtra(Intent.EXTRA_TEXT, "Отчет по результатам проверки работ")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            
+            startActivity(Intent.createChooser(shareIntent, "Отправить отчет"))
+            
+        } catch (e: Exception) {
+            Log.e("ReportsActivity", "Ошибка при отправке файла", e)
+            Toast.makeText(this, "Ошибка при отправке файла", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    /**
+     * Открывает папку с файлом
+     */
+    private fun openFileLocation(file: File) {
+        try {
+            val intent = Intent(Intent.ACTION_VIEW)
+            val uri = Uri.parse("content://com.android.externalstorage.documents/document/primary:Download")
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            
+            // Пытаемся открыть папку Downloads
+            try {
+                startActivity(intent)
+            } catch (e: Exception) {
+                // Если не получилось, показываем путь к файлу
+                Toast.makeText(this, "Файл сохранен: ${file.absolutePath}", Toast.LENGTH_LONG).show()
+            }
+            
+        } catch (e: Exception) {
+            Log.e("ReportsActivity", "Ошибка при открытии папки", e)
+            Toast.makeText(this, "Файл сохранен в папке 'Загрузки'", Toast.LENGTH_LONG).show()
+        }
+    }
+    
+    // Методы для работы с настройками критериев
+    private fun loadCriteriaSettings() {
+        val prefs = getSharedPreferences("criteria_settings", MODE_PRIVATE)
+        val isPercentages = prefs.getBoolean("is_percentages", true)
+        
+        findViewById<RadioButton>(R.id.rb_percentages).isChecked = isPercentages
+        findViewById<RadioButton>(R.id.rb_grades).isChecked = !isPercentages
+        
+        findViewById<EditText>(R.id.et_grade_5).setText(prefs.getInt("grade_5", 90).toString())
+        findViewById<EditText>(R.id.et_grade_4).setText(prefs.getInt("grade_4", 75).toString())
+        findViewById<EditText>(R.id.et_grade_3).setText(prefs.getInt("grade_3", 50).toString())
+        findViewById<EditText>(R.id.et_grade_2).setText(prefs.getInt("grade_2", 0).toString())
+        
+        updateUnitLabels(if (isPercentages) "%" else "балл")
+        
+        // Применяем загруженные критерии к ReportsManager
+        applyLoadedCriteriaToManager()
+    }
+    
+    private fun applyLoadedCriteriaToManager() {
+        val prefs = getSharedPreferences("criteria_settings", MODE_PRIVATE)
+        val isPercentages = prefs.getBoolean("is_percentages", true)
+        val grade5 = prefs.getInt("grade_5", if (isPercentages) 90 else 0)
+        val grade4 = prefs.getInt("grade_4", if (isPercentages) 75 else 0)
+        val grade3 = prefs.getInt("grade_3", if (isPercentages) 50 else 0)
+        val grade2 = prefs.getInt("grade_2", if (isPercentages) 0 else 0)
+        
+        // Создаем критерии в формате ReportsManager
+        val criteria = if (isPercentages) {
+            // Режим процентов
+            mapOf(
+                5 to grade5.toDouble()..100.0,
+                4 to grade4.toDouble()..(grade5 - 0.01),
+                3 to grade3.toDouble()..(grade4 - 0.01),
+                2 to 0.0..(grade3 - 0.01)
+            )
+        } else {
+            // Режим баллов - сравниваем количество правильных ответов
+            mapOf(
+                5 to grade5.toDouble()..1000.0, // Большой диапазон для максимального количества вопросов
+                4 to grade4.toDouble()..(grade5 - 0.01),
+                3 to grade3.toDouble()..(grade4 - 0.01),
+                2 to 0.0..(grade3 - 0.01)
+            )
+        }
+        
+        // Обновляем критерии в ReportsManager
+        val newCriteria = ReportsManager.GradingCriteria(
+            id = "custom",
+            name = if (isPercentages) "Пользовательские (проценты)" else "Пользовательские (баллы)",
+            type = if (isPercentages) ReportsManager.CriteriaType.PERCENTAGE else ReportsManager.CriteriaType.POINTS,
+            criteria = criteria
+        )
+        
+        // Добавляем или обновляем критерии
+        val existingCriteria = reportsManager.getCriteriaList().find { it.id == "custom" }
+        if (existingCriteria != null) {
+            // Обновляем существующие критерии
+            reportsManager.deleteCriteria("custom")
+        }
+        reportsManager.addCriteria(newCriteria)
+        reportsManager.setCurrentCriteria("custom")
+    }
+    
+    private fun updateUnitLabels(unit: String) {
+        findViewById<TextView>(R.id.tv_grade_5_unit).text = unit
+        findViewById<TextView>(R.id.tv_grade_4_unit).text = unit
+        findViewById<TextView>(R.id.tv_grade_3_unit).text = unit
+        findViewById<TextView>(R.id.tv_grade_2_unit).text = unit
+    }
+    
+    private fun updateDefaultValues(isPercentages: Boolean) {
+        if (isPercentages) {
+            findViewById<EditText>(R.id.et_grade_5).setText("90")
+            findViewById<EditText>(R.id.et_grade_4).setText("75")
+            findViewById<EditText>(R.id.et_grade_3).setText("50")
+            findViewById<EditText>(R.id.et_grade_2).setText("0")
+        } else {
+            findViewById<EditText>(R.id.et_grade_5).setText("")
+            findViewById<EditText>(R.id.et_grade_4).setText("")
+            findViewById<EditText>(R.id.et_grade_3).setText("")
+            findViewById<EditText>(R.id.et_grade_2).setText("")
+        }
+    }
+    
+    private fun applyCriteriaSettings() {
+        val prefs = getSharedPreferences("criteria_settings", MODE_PRIVATE)
+        val editor = prefs.edit()
+        
+        val isPercentages = findViewById<RadioButton>(R.id.rb_percentages).isChecked
+        editor.putBoolean("is_percentages", isPercentages)
+        
+        val grade5 = findViewById<EditText>(R.id.et_grade_5).text.toString().toIntOrNull() ?: (if (isPercentages) 90 else 0)
+        val grade4 = findViewById<EditText>(R.id.et_grade_4).text.toString().toIntOrNull() ?: (if (isPercentages) 75 else 0)
+        val grade3 = findViewById<EditText>(R.id.et_grade_3).text.toString().toIntOrNull() ?: (if (isPercentages) 50 else 0)
+        val grade2 = findViewById<EditText>(R.id.et_grade_2).text.toString().toIntOrNull() ?: (if (isPercentages) 0 else 0)
+        
+        editor.putInt("grade_5", grade5)
+        editor.putInt("grade_4", grade4)
+        editor.putInt("grade_3", grade3)
+        editor.putInt("grade_2", grade2)
+        
+        editor.apply()
+        
+        // Обновляем критерии в ReportsManager
+        val newCriteria = mapOf(
+            "is_percentages" to isPercentages,
+            "grade_5" to grade5,
+            "grade_4" to grade4,
+            "grade_3" to grade3,
+            "grade_2" to grade2
+        )
+        
+        // Пересчитываем оценки для всех отчетов с новыми критериями
+        val reports = reportsManager.getReports()
+        reports.forEach { report ->
+            val newGrade = calculateGrade(report.omrResult.grading, newCriteria)
+            reportsManager.updateReportGrade(report.id, newGrade)
+        }
+        
+        // Перезагружаем отчеты с новыми критериями
+        loadReports()
+        loadStatistics()
+    }
+    
+    /**
+     * Вычисляет оценку на основе результатов и критериев
+     */
+    private fun calculateGrade(grading: IntArray, criteria: Map<String, Any>): Int {
+        val correctAnswers = grading.count { it == 1 }
+        val totalQuestions = grading.size
+        
+        if (totalQuestions == 0) return 2
+        
+        val isPercentages = criteria["is_percentages"] as? Boolean ?: true
+        
+        return if (isPercentages) {
+            // Режим процентов - создаем диапазоны
+            val percentage = (correctAnswers.toDouble() / totalQuestions) * 100
+            val grade5 = criteria["grade_5"] as? Int ?: 90
+            val grade4 = criteria["grade_4"] as? Int ?: 75
+            val grade3 = criteria["grade_3"] as? Int ?: 50
+            val grade2 = criteria["grade_2"] as? Int ?: 0
+            
+            when {
+                percentage >= grade5 -> 5  // 90% и более = 5
+                percentage >= grade4 -> 4  // 75% и более, но меньше 90% = 4
+                percentage >= grade3 -> 3  // 50% и более, но меньше 75% = 3
+                percentage >= grade2 -> 2  // 0% и более, но меньше 50% = 2
+                else -> 2                 // меньше 0% = 2
+            }
+        } else {
+            // Режим баллов - создаем диапазоны на основе критериев
+            val grade5 = criteria["grade_5"] as? Int ?: 5
+            val grade4 = criteria["grade_4"] as? Int ?: 4
+            val grade3 = criteria["grade_3"] as? Int ?: 3
+            val grade2 = criteria["grade_2"] as? Int ?: 2
+            
+            when {
+                correctAnswers >= grade5 -> 5  // 4 и более = 5
+                correctAnswers >= grade4 -> 4  // равно 3 но меньше 4 = 4
+                correctAnswers >= grade3 -> 3  // равно 2 но меньше 3 = 3
+                correctAnswers >= grade2 -> 2  // больше или равно 0 но меньше 2 = 2
+                else -> 2
+            }
+        }
+    }
+    
+    private fun showResetReportsDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("🗑️ Сброс отчетов")
+            .setMessage("Вы уверены, что хотите удалить все отчеты? Это действие нельзя отменить.")
+            .setPositiveButton("Удалить") { _, _ ->
+                val reports = reportsManager.getReports()
+                reports.forEach { report ->
+                    reportsManager.deleteReport(report.id)
+                }
+                loadReports()
+                loadStatistics()
+                Toast.makeText(this, "🗑️ Все отчеты удалены", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("Отмена", null)
+            .show()
     }
 } 

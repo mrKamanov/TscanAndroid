@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:background="@drawable/dialog_background_dark">
+
+    <!-- Иконка успеха -->
+    <ImageView
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="16dp"
+        android:src="@drawable/ic_check_circle"
+        android:tint="@color/success_green" />
+
+    <!-- Заголовок -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="✅ Экспорт завершен!"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/white"
+        android:gravity="center"
+        android:layout_marginBottom="8dp" />
+
+    <!-- Информация о файле -->
+    <TextView
+        android:id="@+id/tv_file_info"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Файл сохранен в папке 'Загрузки'"
+        android:textSize="14sp"
+        android:textColor="@color/text_secondary"
+        android:gravity="center"
+        android:layout_marginBottom="24dp" />
+
+    <!-- Кнопки -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center">
+
+        <Button
+            android:id="@+id/btn_open_file"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            android:text="📂 Открыть папку"
+            android:textColor="@android:color/white"
+            android:backgroundTint="@color/accent"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/btn_share_file"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:text="📤 Отправить"
+            android:textColor="@android:color/white"
+            android:backgroundTint="@color/success_green"
+            android:textSize="12sp" />
+
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btn_close"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Закрыть"
+        android:textColor="@color/text_secondary"
+        android:backgroundTint="@android:color/transparent"
+        android:textSize="14sp"
+        style="@style/Widget.AppCompat.Button.Borderless" />
+
+</LinearLayout> 

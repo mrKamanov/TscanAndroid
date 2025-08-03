@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="16dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="8dp"
+    app:cardBackgroundColor="#2C3E50">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/tv_error_analysis_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="❌ Топ-5 самых сложных вопросов"
+            android:textSize="18sp"
+            android:textColor="@color/white"
+            android:fontFamily="@font/krabuler"
+            android:layout_marginBottom="16dp" />
+
+        <LinearLayout
+            android:id="@+id/error_analysis_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="100dp"
+            android:orientation="vertical" />
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView> 

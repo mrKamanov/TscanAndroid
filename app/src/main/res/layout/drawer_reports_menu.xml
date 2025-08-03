@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="280dp"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/drawer_background"
+    android:padding="16dp">
+
+    <!-- Заголовок -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="⚙️ Настройки"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@color/white"
+        android:fontFamily="@font/krabuler"
+        android:gravity="center"
+        android:layout_marginBottom="24dp" />
+
+    <!-- Переключатель режима -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="📊 Режим оценки"
+        android:textSize="16sp"
+        android:textColor="@color/white"
+        android:fontFamily="@font/krabuler"
+        android:layout_marginBottom="8dp" />
+
+    <RadioGroup
+        android:id="@+id/rg_grading_mode"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="24dp">
+
+        <RadioButton
+            android:id="@+id/rb_percentages"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Проценты"
+            android:textColor="@color/white"
+            android:fontFamily="@font/krabuler"
+            android:buttonTint="@color/primary_blue"
+            android:checked="true" />
+
+        <RadioButton
+            android:id="@+id/rb_grades"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Баллы"
+            android:textColor="@color/white"
+            android:fontFamily="@font/krabuler"
+            android:buttonTint="@color/primary_blue" />
+
+    </RadioGroup>
+
+    <!-- Настройки критериев -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="🎯 Критерии оценок"
+        android:textSize="16sp"
+        android:textColor="@color/white"
+        android:fontFamily="@font/krabuler"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Оценка 5 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="12dp">
+
+        <TextView
+            android:layout_width="40dp"
+            android:layout_height="wrap_content"
+            android:text="5:"
+            android:textSize="16sp"
+            android:textColor="@color/success_green"
+            android:fontFamily="@font/krabuler"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/et_grade_5"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:hint="90%"
+            android:text="90"
+            android:inputType="number"
+            android:textColor="@color/white"
+            android:textColorHint="@color/text_secondary"
+            android:fontFamily="@font/krabuler"
+            android:background="@drawable/edit_text_background"
+            android:padding="8dp" />
+
+        <TextView
+            android:id="@+id/tv_grade_5_unit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="%"
+            android:textSize="14sp"
+            android:textColor="@color/text_secondary"
+            android:fontFamily="@font/krabuler"
+            android:layout_marginStart="8dp" />
+
+    </LinearLayout>
+
+    <!-- Оценка 4 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="12dp">
+
+        <TextView
+            android:layout_width="40dp"
+            android:layout_height="wrap_content"
+            android:text="4:"
+            android:textSize="16sp"
+            android:textColor="@color/accent"
+            android:fontFamily="@font/krabuler"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/et_grade_4"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:hint="75%"
+            android:text="75"
+            android:inputType="number"
+            android:textColor="@color/white"
+            android:textColorHint="@color/text_secondary"
+            android:fontFamily="@font/krabuler"
+            android:background="@drawable/edit_text_background"
+            android:padding="8dp" />
+
+        <TextView
+            android:id="@+id/tv_grade_4_unit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="%"
+            android:textSize="14sp"
+            android:textColor="@color/text_secondary"
+            android:fontFamily="@font/krabuler"
+            android:layout_marginStart="8dp" />
+
+    </LinearLayout>
+
+    <!-- Оценка 3 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="12dp">
+
+        <TextView
+            android:layout_width="40dp"
+            android:layout_height="wrap_content"
+            android:text="3:"
+            android:textSize="16sp"
+            android:textColor="@color/warning"
+            android:fontFamily="@font/krabuler"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/et_grade_3"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:hint="60%"
+            android:text="60"
+            android:inputType="number"
+            android:textColor="@color/white"
+            android:textColorHint="@color/text_secondary"
+            android:fontFamily="@font/krabuler"
+            android:background="@drawable/edit_text_background"
+            android:padding="8dp" />
+
+        <TextView
+            android:id="@+id/tv_grade_3_unit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="%"
+            android:textSize="14sp"
+            android:textColor="@color/text_secondary"
+            android:fontFamily="@font/krabuler"
+            android:layout_marginStart="8dp" />
+
+    </LinearLayout>
+
+    <!-- Оценка 2 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="24dp">
+
+        <TextView
+            android:layout_width="40dp"
+            android:layout_height="wrap_content"
+            android:text="2:"
+            android:textSize="16sp"
+            android:textColor="@color/error"
+            android:fontFamily="@font/krabuler"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/et_grade_2"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:hint="45%"
+            android:text="45"
+            android:inputType="number"
+            android:textColor="@color/white"
+            android:textColorHint="@color/text_secondary"
+            android:fontFamily="@font/krabuler"
+            android:background="@drawable/edit_text_background"
+            android:padding="8dp" />
+
+        <TextView
+            android:id="@+id/tv_grade_2_unit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="%"
+            android:textSize="14sp"
+            android:textColor="@color/text_secondary"
+            android:fontFamily="@font/krabuler"
+            android:layout_marginStart="8dp" />
+
+    </LinearLayout>
+
+    <!-- Разделитель -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/text_secondary"
+        android:layout_marginVertical="16dp" />
+
+    <!-- Кнопки действий -->
+    <Button
+        android:id="@+id/btn_apply_criteria"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="✅ Применить"
+        android:textColor="@android:color/white"
+        android:backgroundTint="@color/success_green"
+        android:fontFamily="@font/krabuler"
+        android:layout_marginBottom="12dp" />
+
+    <Button
+        android:id="@+id/btn_export_excel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="📊 Экспорт в Excel"
+        android:textColor="@android:color/white"
+        android:backgroundTint="@color/primary_blue"
+        android:fontFamily="@font/krabuler"
+        android:layout_marginBottom="12dp" />
+
+    <Button
+        android:id="@+id/btn_reset_reports"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="🗑️ Сбросить отчеты"
+        android:textColor="@android:color/white"
+        android:backgroundTint="@color/error"
+        android:fontFamily="@font/krabuler" />
+
+</LinearLayout> 

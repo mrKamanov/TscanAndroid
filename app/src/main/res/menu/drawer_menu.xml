@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <group android:checkableBehavior="none">
+        
+        <item
+            android:id="@+id/nav_criteria_settings"
+            android:icon="@drawable/ic_layers"
+            android:title="Настройки критериев"
+            app:showAsAction="never" />
+
+        <item
+            android:id="@+id/nav_add_criteria"
+            android:icon="@drawable/ic_build"
+            android:title="Добавить критерии"
+            app:showAsAction="never" />
+
+        <item
+            android:id="@+id/nav_export_excel"
+            android:icon="@drawable/ic_description"
+            android:title="📊 Экспорт в Excel"
+            app:showAsAction="never" />
+
+        <item
+            android:id="@+id/nav_reset_reports"
+            android:icon="@drawable/ic_cancel"
+            android:title="Сбросить все отчеты"
+            app:showAsAction="never" />
+
+    </group>
+
+</menu> 

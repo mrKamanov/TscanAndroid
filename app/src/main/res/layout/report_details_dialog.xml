@@ -4,8 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:background="@drawable/menu_card_bg"
-    android:padding="24dp">
+    android:padding="24dp"
+    android:background="@drawable/drawer_background">
 
     <!-- Заголовок -->
     <LinearLayout
@@ -19,37 +19,41 @@
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:src="@drawable/ic_description"
-            android:tint="@color/primary"
+            android:tint="@color/white"
             android:layout_marginEnd="12dp" />
 
         <TextView
-            android:id="@+id/dialog_title"
+            android:id="@+id/tv_report_title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Работа 1"
-            android:textSize="24sp"
+            android:text="Название работы"
+            android:textSize="20sp"
             android:textStyle="bold"
-            android:textColor="@color/text"
+            android:textColor="@color/white"
             android:fontFamily="@font/krabuler" />
 
-        <TextView
-            android:id="@+id/dialog_date"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="01.08.2025 23:37"
-            android:textSize="14sp"
-            android:textColor="@color/text_secondary" />
     </LinearLayout>
+
+    <!-- Дата -->
+    <TextView
+        android:id="@+id/tv_report_date"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Дата: 01.01.2024"
+        android:textSize="14sp"
+        android:textColor="@color/text_secondary"
+        android:fontFamily="@font/krabuler"
+        android:layout_marginBottom="20dp" />
 
     <!-- Статистика -->
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
+        android:layout_marginBottom="20dp"
         app:cardCornerRadius="12dp"
-        app:cardElevation="4dp"
-        app:cardBackgroundColor="@color/surface">
+        app:cardElevation="8dp"
+        app:cardBackgroundColor="#2C3E50">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -61,9 +65,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="📊 Статистика"
-                android:textSize="18sp"
+                android:textSize="16sp"
                 android:textStyle="bold"
-                android:textColor="@color/primary"
+                android:textColor="@color/white"
+                android:fontFamily="@font/krabuler"
                 android:layout_marginBottom="12dp" />
 
             <LinearLayout
@@ -76,18 +81,21 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="✅ Правильных ответов:"
-                    android:textColor="@color/text"
-                    android:textSize="14sp" />
+                    android:text="Правильных ответов:"
+                    android:textSize="14sp"
+                    android:textColor="@color/white"
+                    android:fontFamily="@font/krabuler" />
 
                 <TextView
-                    android:id="@+id/correct_answers"
+                    android:id="@+id/tv_correct_answers"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="4"
+                    android:text="0"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
                     android:textColor="@color/success"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
+                    android:fontFamily="@font/krabuler" />
+
             </LinearLayout>
 
             <LinearLayout
@@ -100,18 +108,21 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="❌ Неправильных ответов:"
-                    android:textColor="@color/text"
-                    android:textSize="14sp" />
+                    android:text="Неправильных ответов:"
+                    android:textSize="14sp"
+                    android:textColor="@color/white"
+                    android:fontFamily="@font/krabuler" />
 
                 <TextView
-                    android:id="@+id/incorrect_answers"
+                    android:id="@+id/tv_incorrect_answers"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="1"
+                    android:text="0"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
                     android:textColor="@color/error"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
+                    android:fontFamily="@font/krabuler" />
+
             </LinearLayout>
 
             <LinearLayout
@@ -124,18 +135,21 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="📈 Процент выполнения:"
-                    android:textColor="@color/text"
-                    android:textSize="14sp" />
+                    android:text="Процент выполнения:"
+                    android:textSize="14sp"
+                    android:textColor="@color/white"
+                    android:fontFamily="@font/krabuler" />
 
                 <TextView
-                    android:id="@+id/completion_percentage"
+                    android:id="@+id/tv_percentage"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="80.0%"
-                    android:textColor="@color/info"
+                    android:text="0%"
                     android:textSize="14sp"
-                    android:textStyle="bold" />
+                    android:textStyle="bold"
+                    android:textColor="@color/info"
+                    android:fontFamily="@font/krabuler" />
+
             </LinearLayout>
 
             <LinearLayout
@@ -147,31 +161,35 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="🏆 Оценка:"
-                    android:textColor="@color/text"
-                    android:textSize="14sp" />
+                    android:text="Итоговая оценка:"
+                    android:textSize="14sp"
+                    android:textColor="@color/white"
+                    android:fontFamily="@font/krabuler" />
 
                 <TextView
-                    android:id="@+id/grade"
+                    android:id="@+id/tv_grade"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="4"
+                    android:text="Оценка 0"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
                     android:textColor="@color/success"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
+                    android:fontFamily="@font/krabuler" />
+
             </LinearLayout>
+
         </LinearLayout>
+
     </androidx.cardview.widget.CardView>
 
     <!-- Ошибки -->
     <androidx.cardview.widget.CardView
-        android:id="@+id/errors_card"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="20dp"
         app:cardCornerRadius="12dp"
-        app:cardElevation="4dp"
-        app:cardBackgroundColor="@color/surface">
+        app:cardElevation="8dp"
+        app:cardBackgroundColor="#2C3E50">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -183,17 +201,19 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="❌ Ошибки"
-                android:textSize="18sp"
+                android:textSize="16sp"
                 android:textStyle="bold"
-                android:textColor="@color/error"
-                android:layout_marginBottom="4dp" />
-            
+                android:textColor="@color/white"
+                android:fontFamily="@font/krabuler"
+                android:layout_marginBottom="8dp" />
+
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="(Варианты ответов: 1, 2, 3, 4, 5...)"
                 android:textSize="12sp"
                 android:textColor="@color/text_secondary"
+                android:fontFamily="@font/krabuler"
                 android:layout_marginBottom="12dp" />
 
             <ScrollView
@@ -210,17 +230,18 @@
             </ScrollView>
 
         </LinearLayout>
+
     </androidx.cardview.widget.CardView>
 
     <!-- Кнопка закрытия -->
-    <com.google.android.material.button.MaterialButton
+    <Button
         android:id="@+id/btn_close"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Закрыть"
-        android:textColor="@color/text_inverse"
-        android:backgroundTint="@color/primary"
-        app:cornerRadius="12dp"
-        android:padding="12dp" />
+        android:textSize="16sp"
+        android:background="@drawable/apply_settings_button"
+        android:textColor="@color/white"
+        android:fontFamily="@font/krabuler" />
 
 </LinearLayout> 

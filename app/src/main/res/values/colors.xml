@@ -14,7 +14,7 @@
     <color name="background">#2E3440</color>
     <color name="surface">#3B4252</color>
     <color name="text">#ECEFF4</color>
-    <color name="text_secondary">#D8DEE9</color>
+    <color name="text_secondary">#757575</color>
     <color name="text_inverse">#FFFFFF</color>
     <color name="error">#BF616A</color>
     <color name="success">#A3BE8C</color>
@@ -22,4 +22,7 @@
     <color name="info">#81A1C1</color>
     <color name="accent">#D08770</color>
     <color name="border">#FFFFFF</color>
+    <color name="success_green">#4CAF50</color>
+    <color name="primary_blue">#2196F3</color>
+    <color name="text_primary">#212121</color>
 </resources>

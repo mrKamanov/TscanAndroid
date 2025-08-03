@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/report_card"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
     app:cardCornerRadius="12dp"
-    app:cardElevation="4dp"
-    app:cardBackgroundColor="@color/surface">
+    app:cardElevation="8dp"
+    app:cardBackgroundColor="#2C3E50">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -15,7 +16,6 @@
         android:padding="16dp"
         android:gravity="center_vertical">
 
-        <!-- Основная информация -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -23,55 +23,56 @@
             android:orientation="vertical">
 
             <TextView
-                android:id="@+id/report_title"
+                android:id="@+id/tv_report_title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Работа 1"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="@color/text"
-                android:layout_marginBottom="4dp" />
-
-            <TextView
-                android:id="@+id/report_date"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="01.01.2025 12:00"
-                android:textSize="12sp"
-                android:textColor="@color/text_secondary"
-                android:layout_marginBottom="8dp" />
-
-            <TextView
-                android:id="@+id/report_stats"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="✅ 4/5 (80.0%)"
-                android:textSize="14sp"
-                android:textColor="@color/text"
-                android:layout_marginBottom="4dp" />
-
-            <TextView
-                android:id="@+id/report_grade"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Оценка: 4"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:textColor="@color/success" />
+                android:textColor="@color/white"
+                android:fontFamily="@font/krabuler"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:id="@+id/tv_report_date"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="01.01.2024"
+                android:textSize="12sp"
+                android:textColor="@color/text_secondary"
+                android:fontFamily="@font/krabuler"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:id="@+id/tv_report_stats"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="4/5 (80.0%)"
+                android:textSize="14sp"
+                android:textColor="@color/info"
+                android:fontFamily="@font/krabuler"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:id="@+id/tv_report_grade"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Оценка 4"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="@color/success"
+                android:fontFamily="@font/krabuler" />
 
         </LinearLayout>
 
-        <!-- Кнопка удаления -->
         <ImageButton
             android:id="@+id/btn_delete_report"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:src="@drawable/ic_close_white"
-            android:background="@drawable/menu_card_bg"
-            android:backgroundTint="@color/error"
-            android:tint="@color/text_inverse"
-            android:contentDescription="Удалить отчет"
-            android:padding="12dp" />
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:tint="@color/error"
+            android:contentDescription="Удалить отчет" />
 
     </LinearLayout>
 

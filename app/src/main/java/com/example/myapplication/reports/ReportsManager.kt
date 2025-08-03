@@ -72,7 +72,7 @@ class ReportsManager(private val context: Context) {
         if (criteriaList.isEmpty()) {
             // Критерии по процентам
             val percentageCriteria = GradingCriteria(
-                id = "percentage_default",
+                id = "default",
                 name = "По процентам (по умолчанию)",
                 type = CriteriaType.PERCENTAGE,
                 criteria = mapOf(
@@ -131,12 +131,27 @@ class ReportsManager(private val context: Context) {
     }
     
     /**
-     * Добавляет критерии оценки
+     * Обновляет оценку отчета
+     */
+    fun updateReportGrade(reportId: String, newGrade: Int): Boolean {
+        val report = reports.find { it.id == reportId }
+        if (report != null) {
+            report.grade = newGrade
+            saveData()
+            Log.d(TAG, "📊 Обновлена оценка отчета $reportId: $newGrade")
+            return true
+        }
+        return false
+    }
+    
+    /**
+     * Добавляет новые критерии
      */
     fun addCriteria(criteria: GradingCriteria) {
         criteriaList.add(criteria)
+        Log.d(TAG, "📊 Добавляем критерии: ${criteria.name}, тип: ${criteria.type}, критерии: ${criteria.criteria}")
         saveData()
-        Log.d(TAG, "📊 Добавлены критерии: ${criteria.name}")
+        Log.d(TAG, "📊 Критерии добавлены: ${criteria.name}, всего критериев: ${criteriaList.size}")
     }
     
     /**
@@ -225,14 +240,11 @@ class ReportsManager(private val context: Context) {
     /**
      * Пересчитывает оценки для всех отчетов
      */
-    private fun recalculateAllGrades() {
+    fun recalculateAllGrades() {
         reports.forEach { report ->
             val newGrade = calculateGrade(report.omrResult)
-            if (newGrade != report.grade) {
-                Log.d(TAG, "🔄 Пересчитана оценка для работы ${report.workNumber}: ${report.grade} -> $newGrade")
-                report.grade = newGrade
-                report.criteriaId = currentCriteriaId
-            }
+            report.grade = newGrade
+            report.criteriaId = currentCriteriaId
         }
         saveData()
     }
@@ -282,9 +294,16 @@ class ReportsManager(private val context: Context) {
                     put("name", criteria.name)
                     put("type", criteria.type.name)
                     put("maxPoints", criteria.maxPoints)
-                    put("criteria", JSONObject(criteria.criteria.mapKeys { it.key.toString() }))
+                    
+                    // Сохраняем критерии в правильном формате
+                    val criteriaJson = JSONObject()
+                    criteria.criteria.forEach { (grade, range) ->
+                        criteriaJson.put(grade.toString(), "${range.start}..${range.endInclusive}")
+                    }
+                    put("criteria", criteriaJson)
                 }
                 criteriaArray.put(criteriaObj)
+                Log.d(TAG, "💾 Сохраняем критерии: ${criteria.name} -> ${criteriaObj}")
             }
             
             prefs.edit()
@@ -397,6 +416,154 @@ class ReportsManager(private val context: Context) {
      */
     fun forceSave() {
         saveData()
+    }
+
+    fun getStatistics(): Map<String, Any> {
+        if (reports.isEmpty()) {
+            return mapOf(
+                "totalWorks" to 0,
+                "averageGrade" to 0.0,
+                "successRate" to 0.0,
+                "gradeDistribution" to mapOf(2 to 0, 3 to 0, 4 to 0, 5 to 0),
+                "errorAnalysis" to emptyList<Map<String, Any>>(),
+                "questionHeatmap" to emptyList<Map<String, Any>>(),
+                "timeProgress" to emptyList<Map<String, Any>>()
+            )
+        }
+
+        val totalWorks = reports.size
+        val averageGrade = reports.map { it.grade }.average()
+        val successRate = (reports.count { it.grade >= 3 }.toDouble() / totalWorks) * 100
+
+        // Распределение оценок
+        val gradeDistribution = mapOf(
+            2 to reports.count { it.grade == 2 },
+            3 to reports.count { it.grade == 3 },
+            4 to reports.count { it.grade == 4 },
+            5 to reports.count { it.grade == 5 }
+        )
+
+        // Анализ ошибок по вопросам
+        val errorAnalysis = mutableListOf<Map<String, Any>>()
+        val questionErrors = mutableMapOf<Int, Int>()
+        
+        reports.forEach { report ->
+            report.omrResult.grading.forEachIndexed { index, isCorrect ->
+                if (isCorrect == 0) {
+                    questionErrors[index + 1] = questionErrors.getOrDefault(index + 1, 0) + 1
+                }
+            }
+        }
+        
+        questionErrors.entries.sortedByDescending { it.value }.take(5).forEach { (question, errors) ->
+            errorAnalysis.add(mapOf(
+                "question" to question,
+                "errors" to errors,
+                "percentage" to (errors.toDouble() / totalWorks * 100)
+            ))
+        }
+
+        // Тепловая карта вопросов
+        val questionHeatmap = mutableListOf<Map<String, Any>>()
+        val totalQuestions = reports.firstOrNull()?.omrResult?.grading?.size ?: 0
+        
+        Log.d(TAG, "🔥 Создание тепловой карты: $totalQuestions вопросов, $totalWorks работ")
+        
+        if (totalQuestions > 0) {
+            for (question in 1..totalQuestions) {
+                val correctAnswers = reports.count { report ->
+                    report.omrResult.grading.getOrNull(question - 1) == 1
+                }
+                val successRate = (correctAnswers.toDouble() / totalWorks) * 100
+                
+                questionHeatmap.add(mapOf(
+                    "question" to question,
+                    "successRate" to successRate,
+                    "correctAnswers" to correctAnswers,
+                    "totalAnswers" to totalWorks
+                ))
+                
+                Log.d(TAG, "🔥 Вопрос $question: $correctAnswers/$totalWorks (${String.format("%.1f", successRate)}%)")
+            }
+        } else {
+            Log.w(TAG, "🔥 Нет вопросов для тепловой карты")
+        }
+        
+        Log.d(TAG, "🔥 Тепловая карта создана: ${questionHeatmap.size} элементов")
+
+        // Динамика результатов по времени
+        val timeProgress = reports.sortedBy { it.date }.mapIndexed { index, report ->
+            val averageGradeUpToThis = reports.take(index + 1).map { it.grade }.average()
+            mapOf(
+                "date" to report.date,
+                "workNumber" to report.workNumber,
+                "averageGrade" to averageGradeUpToThis,
+                "totalWorks" to index + 1
+            )
+        }
+
+        // Анализ связанных ошибок
+        val relatedErrors = analyzeRelatedErrors()
+
+        return mapOf(
+            "totalWorks" to totalWorks,
+            "averageGrade" to averageGrade,
+            "successRate" to successRate,
+            "gradeDistribution" to gradeDistribution,
+            "errorAnalysis" to errorAnalysis,
+            "questionHeatmap" to questionHeatmap,
+            "relatedErrors" to relatedErrors
+        )
+    }
+
+    /**
+     * Анализирует связанные ошибки между вопросами
+     */
+    private fun analyzeRelatedErrors(): List<Map<String, Any>> {
+        val totalWorks = reports.size
+        if (totalWorks < 2) return emptyList() // Нужно минимум 2 работы для анализа
+        
+        val totalQuestions = reports.firstOrNull()?.omrResult?.grading?.size ?: 0
+        if (totalQuestions < 2) return emptyList() // Нужно минимум 2 вопроса
+        
+        val relatedErrors = mutableListOf<Map<String, Any>>()
+        
+        // Анализируем пары вопросов
+        for (q1 in 1..totalQuestions) {
+            for (q2 in (q1 + 1)..totalQuestions) {
+                var bothWrong = 0
+                var q1WrongQ2Right = 0
+                var q1RightQ2Wrong = 0
+                var bothRight = 0
+                
+                reports.forEach { report ->
+                    val q1Correct = report.omrResult.grading.getOrNull(q1 - 1) == 1
+                    val q2Correct = report.omrResult.grading.getOrNull(q2 - 1) == 1
+                    
+                    when {
+                        !q1Correct && !q2Correct -> bothWrong++
+                        !q1Correct && q2Correct -> q1WrongQ2Right++
+                        q1Correct && !q2Correct -> q1RightQ2Wrong++
+                        q1Correct && q2Correct -> bothRight++
+                    }
+                }
+                
+                // Если есть связь (оба вопроса часто ошибаются вместе)
+                val correlation = bothWrong.toDouble() / totalWorks
+                if (correlation >= 0.3) { // Если 30% и больше работ имеют ошибки в обоих вопросах
+                    relatedErrors.add(mapOf(
+                        "question1" to q1,
+                        "question2" to q2,
+                        "bothWrong" to bothWrong,
+                        "correlation" to correlation,
+                        "totalWorks" to totalWorks
+                    ))
+                }
+            }
+        }
+        
+        // Сортируем по силе связи (корреляции)
+        return relatedErrors.sortedByDescending { it["correlation"] as Double }.take(5)
     }
 }
 

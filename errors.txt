@@ -1,29 +1,23 @@
 > Task :app:compileDebugKotlin FAILED
-e: file:///C:/Users/mrkam/AndroidStudioProjects/MyApplication/app/src/main/java/com/example/myapplication/ReportsActivity.kt:312:54 Unresolved reference 'EditText'.
-e: file:///C:/Users/mrkam/AndroidStudioProjects/MyApplication/app/src/main/java/com/example/myapplication/ReportsActivity.kt:313:54 Unresolved reference 'RadioGroup'.
-e: file:///C:/Users/mrkam/AndroidStudioProjects/MyApplication/app/src/main/java/com/example/myapplication/ReportsActivity.kt:314:52 Unresolved reference 'RadioButton'.
-e: file:///C:/Users/mrkam/AndroidStudioProjects/MyApplication/app/src/main/java/com/example/myapplication/ReportsActivity.kt:315:48 Unresolved reference 'RadioButton'.
-e: file:///C:/Users/mrkam/AndroidStudioProjects/MyApplication/app/src/main/java/com/example/myapplication/ReportsActivity.kt:317:51 Unresolved reference 'EditText'.
-e: file:///C:/Users/mrkam/AndroidStudioProjects/MyApplication/app/src/main/java/com/example/myapplication/ReportsActivity.kt:318:51 Unresolved reference 'EditText'.
-e: file:///C:/Users/mrkam/AndroidStudioProjects/MyApplication/app/src/main/java/com/example/myapplication/ReportsActivity.kt:319:51 Unresolved reference 'EditText'.
-e: file:///C:/Users/mrkam/AndroidStudioProjects/MyApplication/app/src/main/java/com/example/myapplication/ReportsActivity.kt:320:51 Unresolved reference 'EditText'.
-e: file:///C:/Users/mrkam/AndroidStudioProjects/MyApplication/app/src/main/java/com/example/myapplication/ReportsActivity.kt:323:24 Unresolved reference 'setOnCheckedChangeListener'.
-e: file:///C:/Users/mrkam/AndroidStudioProjects/MyApplication/app/src/main/java/com/example/myapplication/ReportsActivity.kt:323:53 Cannot infer type for this parameter. Please specify it explicitly.
-e: file:///C:/Users/mrkam/AndroidStudioProjects/MyApplication/app/src/main/java/com/example/myapplication/ReportsActivity.kt:323:56 Cannot infer type for this parameter. Please specify it explicitly.
-e: file:///C:/Users/mrkam/AndroidStudioProjects/MyApplication/app/src/main/java/com/example/myapplication/ReportsActivity.kt:327:33 Unresolved reference 'hint'.
-e: file:///C:/Users/mrkam/AndroidStudioProjects/MyApplication/app/src/main/java/com/example/myapplication/ReportsActivity.kt:328:33 Unresolved reference 'hint'.
-e: file:///C:/Users/mrkam/AndroidStudioProjects/MyApplication/app/src/main/java/com/example/myapplication/ReportsActivity.kt:329:33 Unresolved reference 'hint'.
-e: file:///C:/Users/mrkam/AndroidStudioProjects/MyApplication/app/src/main/java/com/example/myapplication/ReportsActivity.kt:330:33 Unresolved reference 'hint'.
-e: file:///C:/Users/mrkam/AndroidStudioProjects/MyApplication/app/src/main/java/com/example/myapplication/ReportsActivity.kt:334:33 Unresolved reference 'hint'.
-e: file:///C:/Users/mrkam/AndroidStudioProjects/MyApplication/app/src/main/java/com/example/myapplication/ReportsActivity.kt:335:33 Unresolved reference 'hint'.
-e: file:///C:/Users/mrkam/AndroidStudioProjects/MyApplication/app/src/main/java/com/example/myapplication/ReportsActivity.kt:336:33 Unresolved reference 'hint'.
-e: file:///C:/Users/mrkam/AndroidStudioProjects/MyApplication/app/src/main/java/com/example/myapplication/ReportsActivity.kt:337:33 Unresolved reference 'hint'.
-e: file:///C:/Users/mrkam/AndroidStudioProjects/MyApplication/app/src/main/java/com/example/myapplication/ReportsActivity.kt:349:39 Unresolved reference 'text'.
-e: file:///C:/Users/mrkam/AndroidStudioProjects/MyApplication/app/src/main/java/com/example/myapplication/ReportsActivity.kt:355:41 Unresolved reference 'isChecked'.
-e: file:///C:/Users/mrkam/AndroidStudioProjects/MyApplication/app/src/main/java/com/example/myapplication/ReportsActivity.kt:358:45 Unresolved reference 'text'.
-e: file:///C:/Users/mrkam/AndroidStudioProjects/MyApplication/app/src/main/java/com/example/myapplication/ReportsActivity.kt:359:45 Unresolved reference 'text'.
-e: file:///C:/Users/mrkam/AndroidStudioProjects/MyApplication/app/src/main/java/com/example/myapplication/ReportsActivity.kt:360:45 Unresolved reference 'text'.
-e: file:///C:/Users/mrkam/AndroidStudioProjects/MyApplication/app/src/main/java/com/example/myapplication/ReportsActivity.kt:361:45 Unresolved reference 'text'.
+e: file:///C:/Users/mrkam/AndroidStudioProjects/MyApplication/app/src/main/java/com/example/myapplication/ReportsActivity.kt:139:9 Overload resolution ambiguity between candidates:
+fun updateCurrentCriteriaText(): Unit
+fun updateCurrentCriteriaText(): Unit
+e: file:///C:/Users/mrkam/AndroidStudioProjects/MyApplication/app/src/main/java/com/example/myapplication/ReportsActivity.kt:266:17 Overload resolution ambiguity between candidates:
+fun updateCurrentCriteriaText(): Unit
+fun updateCurrentCriteriaText(): Unit
+e: file:///C:/Users/mrkam/AndroidStudioProjects/MyApplication/app/src/main/java/com/example/myapplication/ReportsActivity.kt:284:21 Overload resolution ambiguity between candidates:
+fun updateCurrentCriteriaText(): Unit
+fun updateCurrentCriteriaText(): Unit
+e: file:///C:/Users/mrkam/AndroidStudioProjects/MyApplication/app/src/main/java/com/example/myapplication/ReportsActivity.kt:379:17 Overload resolution ambiguity between candidates:
+fun updateCurrentCriteriaText(): Unit
+fun updateCurrentCriteriaText(): Unit
+e: file:///C:/Users/mrkam/AndroidStudioProjects/MyApplication/app/src/main/java/com/example/myapplication/ReportsActivity.kt:407:5 Conflicting overloads:
+fun updateCurrentCriteriaText(): Unit
+e: file:///C:/Users/mrkam/AndroidStudioProjects/MyApplication/app/src/main/java/com/example/myapplication/ReportsActivity.kt:611:9 Overload resolution ambiguity between candidates:
+fun updateCurrentCriteriaText(): Unit
+fun updateCurrentCriteriaText(): Unit
+e: file:///C:/Users/mrkam/AndroidStudioProjects/MyApplication/app/src/main/java/com/example/myapplication/ReportsActivity.kt:661:5 Conflicting overloads:
+fun updateCurrentCriteriaText(): Unit
 
 [Incubating] Problems report is available at: file:///C:/Users/mrkam/AndroidStudioProjects/MyApplication/build/reports/problems/problems-report.html
 
