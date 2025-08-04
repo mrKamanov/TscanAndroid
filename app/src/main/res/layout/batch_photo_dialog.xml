@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/dialog_background_dark"
+    android:padding="20dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Фотография бланка"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_inverse"
+        android:fontFamily="@font/krabuler"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:id="@+id/tv_work_number"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Работа 1"
+        android:textSize="16sp"
+        android:textColor="@color/text_secondary"
+        android:layout_marginBottom="12dp" />
+
+    <ImageView
+        android:id="@+id/iv_photo"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:scaleType="fitCenter"
+        android:background="@drawable/edit_text_background"
+        android:layout_marginBottom="16dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btn_retake"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Переснять"
+            android:textColor="@color/text_inverse"
+            android:textSize="14sp"
+            android:fontFamily="@font/krabuler"
+            android:background="@drawable/batch_button_secondary"
+            android:padding="12dp"
+            android:layout_marginEnd="4dp" />
+
+        <Button
+            android:id="@+id/btn_add_photo"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Добавить"
+            android:textColor="@color/text_inverse"
+            android:textSize="14sp"
+            android:fontFamily="@font/krabuler"
+            android:background="@drawable/batch_button_success"
+            android:padding="12dp"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp" />
+
+        <Button
+            android:id="@+id/btn_finish_camera"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Завершить"
+            android:textColor="@color/text_inverse"
+            android:textSize="14sp"
+            android:fontFamily="@font/krabuler"
+            android:background="@drawable/batch_button_primary"
+            android:padding="12dp"
+            android:layout_marginStart="4dp" />
+    </LinearLayout>
+</LinearLayout> 

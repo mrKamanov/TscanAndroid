@@ -1,15 +1,372 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background">
+    android:background="@color/background"
+    android:orientation="vertical"
+    android:padding="16dp">
 
-    <TextView
-        android:layout_width="wrap_content"
+    <!-- Заголовок -->
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="16dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
         android:text="Пакетная обработка"
         android:textSize="24sp"
         android:textStyle="bold"
         android:textColor="@color/text_inverse"
-        android:layout_gravity="center" />
-</FrameLayout> 
+            android:fontFamily="@font/krabuler" />
+
+        <Button
+            android:id="@+id/btn_reset"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Начать заново"
+            android:textColor="@color/text_inverse"
+            android:textSize="14sp"
+            android:fontFamily="@font/krabuler"
+            android:background="@drawable/batch_button_secondary"
+            android:padding="12dp"
+            android:layout_marginStart="8dp" />
+    </LinearLayout>
+
+    <!-- Основной контент -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Настройки критериев -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardBackgroundColor="@color/card_background"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Настройки критериев"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_inverse"
+                        android:fontFamily="@font/krabuler"
+                        android:layout_marginBottom="12dp" />
+
+                    <!-- Параметры сетки -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="16dp">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:layout_marginEnd="8dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Вопросов: (1-35)"
+                                android:textColor="@color/text_secondary"
+                                android:layout_marginBottom="4dp" />
+
+                            <EditText
+                                android:id="@+id/et_questions"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="number"
+                                android:digits="0123456789"
+                                android:text="5"
+                                android:hint="1-35"
+                                android:textColor="@color/text_inverse"
+                                android:textColorHint="@color/text_secondary"
+                                android:background="@drawable/edit_text_background"
+                                android:padding="8dp" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:layout_marginStart="8dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Вариантов: (1-9)"
+                                android:textColor="@color/text_secondary"
+                                android:layout_marginBottom="4dp" />
+
+                            <EditText
+                                android:id="@+id/et_choices"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="number"
+                                android:digits="0123456789"
+                                android:text="4"
+                                android:hint="1-9"
+                                android:textColor="@color/text_inverse"
+                                android:textColorHint="@color/text_secondary"
+                                android:background="@drawable/edit_text_background"
+                                android:padding="8dp" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- Правильные ответы -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Правильные ответы:"
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginBottom="8dp" />
+
+                    <LinearLayout
+                        android:id="@+id/layout_correct_answers"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:minHeight="200dp" />
+
+                    <!-- Кнопки управления критериями -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="12dp">
+
+                        <Button
+                            android:id="@+id/btn_apply_criteria"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Применить"
+                            android:textColor="@color/text_inverse"
+                            android:textSize="14sp"
+                            android:fontFamily="@font/krabuler"
+                            android:background="@drawable/batch_button_success"
+                            android:padding="12dp"
+                            android:layout_marginEnd="4dp" />
+
+                        <Button
+                            android:id="@+id/btn_save_criteria"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Сохранить"
+                            android:textColor="@color/text_inverse"
+                            android:textSize="14sp"
+                            android:fontFamily="@font/krabuler"
+                            android:background="@drawable/batch_button_primary"
+                            android:padding="12dp"
+                            android:layout_marginStart="4dp"
+                            android:layout_marginEnd="4dp" />
+
+                        <Button
+                            android:id="@+id/btn_load_criteria"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Загрузить"
+                            android:textColor="@color/text_inverse"
+                            android:textSize="14sp"
+                            android:fontFamily="@font/krabuler"
+                            android:background="@drawable/batch_button_secondary"
+                            android:padding="12dp"
+                            android:layout_marginStart="4dp" />
+                    </LinearLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Область загрузки файлов -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardBackgroundColor="@color/card_background"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Загрузка изображений"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_inverse"
+                        android:fontFamily="@font/krabuler"
+                        android:layout_marginBottom="12dp" />
+
+                    <Button
+                        android:id="@+id/btn_select_images"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Выбрать изображения"
+                        android:textColor="@color/text_inverse"
+                        android:textSize="16sp"
+                        android:fontFamily="@font/krabuler"
+                        android:background="@drawable/batch_button_primary"
+                        android:padding="16dp"
+                        android:layout_marginBottom="8dp" />
+
+                    <Button
+                        android:id="@+id/btn_camera"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="📷 Фотографировать"
+                        android:textColor="@color/text_inverse"
+                        android:textSize="16sp"
+                        android:fontFamily="@font/krabuler"
+                        android:background="@drawable/batch_button_success"
+                        android:padding="16dp"
+                        android:layout_marginBottom="8dp" />
+
+                    <TextView
+                        android:id="@+id/tv_selected_count"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Выбрано: 0 файлов"
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginTop="8dp" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Кнопка обработки -->
+            <Button
+                android:id="@+id/btn_process"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Начать обработку"
+                android:textColor="@color/text_inverse"
+                android:textSize="16sp"
+                android:fontFamily="@font/krabuler"
+                android:background="@drawable/batch_button_success"
+                android:padding="16dp"
+                android:layout_marginBottom="16dp"
+                android:enabled="false" />
+
+            <!-- Прогресс обработки -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/card_progress"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:visibility="gone"
+                app:cardBackgroundColor="@color/card_background"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:id="@+id/tv_progress_status"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Обработка изображений..."
+                        android:textSize="16sp"
+                        android:textColor="@color/text_inverse"
+                        android:fontFamily="@font/krabuler"
+                        android:layout_marginBottom="8dp" />
+
+                    <ProgressBar
+                        android:id="@+id/progress_bar"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp" />
+
+                    <TextView
+                        android:id="@+id/tv_progress_count"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0 из 0"
+                        android:textSize="14sp"
+                        android:textColor="@color/text_secondary"
+                        android:fontFamily="@font/krabuler" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Результаты обработки -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardBackgroundColor="@color/card_background"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Результаты обработки"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_inverse"
+                        android:fontFamily="@font/krabuler"
+                        android:layout_marginBottom="12dp" />
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rv_results"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="200dp"
+                        android:nestedScrollingEnabled="false" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Кнопка добавления всех результатов в отчет -->
+            <Button
+                android:id="@+id/btn_add_all_to_report"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Добавить все в отчет"
+                android:textColor="@color/text_inverse"
+                android:textSize="16sp"
+                android:fontFamily="@font/krabuler"
+                android:background="@drawable/batch_button_primary"
+                android:padding="16dp"
+                android:layout_marginTop="16dp"
+                android:enabled="false" />
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout> 

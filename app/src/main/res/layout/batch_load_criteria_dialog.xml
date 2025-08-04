@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/dialog_background_dark"
+    android:padding="20dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Загрузить критерии"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_inverse"
+        android:fontFamily="@font/krabuler"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Нажмите на критерии для загрузки:"
+        android:textColor="@color/text_secondary"
+        android:layout_marginBottom="12dp" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:maxHeight="200dp"
+        android:layout_marginBottom="16dp">
+
+        <LinearLayout
+            android:id="@+id/layout_criteria_list"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+    </ScrollView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btn_cancel_load"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Отмена"
+            android:textColor="@color/text_inverse"
+            android:textSize="14sp"
+            android:fontFamily="@font/krabuler"
+            android:background="@drawable/batch_button_secondary"
+            android:padding="12dp" />
+    </LinearLayout>
+</LinearLayout> 

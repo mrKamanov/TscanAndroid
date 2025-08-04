@@ -10,6 +10,7 @@ import androidx.camera.core.ImageProxy
 import org.opencv.android.Utils
 import org.opencv.core.Mat
 import org.opencv.core.Size
+import org.opencv.core.Scalar
 import org.opencv.imgproc.Imgproc
 import org.opencv.core.Core
 import org.opencv.core.MatOfPoint
@@ -273,31 +274,61 @@ class ImageProcessor {
             val inputMat = Mat()
             Utils.bitmapToMat(inputBitmap, inputMat)
             
-            // Поиск контура бланка
+            // Предобработка изображения (как в Python) - упрощенная версия
+            val adjustedMat = inputMat.clone()
+            
+            // Изменяем размер изображения (как в Python)
+            val imageSize = 800
+            val newWidth = choicesCount * (imageSize / choicesCount)
+            val newHeight = questionsCount * (imageSize / questionsCount)
+            val resizedMat = Mat()
+            Imgproc.resize(adjustedMat, resizedMat, Size(newWidth.toDouble(), newHeight.toDouble()))
+            
+            // Поиск контура бланка (используем параметры из Python приложения)
             val gray = Mat()
-            Imgproc.cvtColor(inputMat, gray, Imgproc.COLOR_BGR2GRAY)
-            Imgproc.GaussianBlur(gray, gray, Size(5.0, 5.0), 0.0)
+            Imgproc.cvtColor(resizedMat, gray, Imgproc.COLOR_BGR2GRAY)
+            Imgproc.GaussianBlur(gray, gray, Size(5.0, 5.0), 1.0)
             val edged = Mat()
-            Imgproc.Canny(gray, edged, 75.0, 200.0)
+            // Очень мягкие пороги для Canny (как в Python: 10, 70)
+            Imgproc.Canny(gray, edged, 10.0, 70.0)
             val contours = ArrayList<MatOfPoint>()
             val hierarchy = Mat()
-            Imgproc.findContours(edged, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE)
+            Imgproc.findContours(edged, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_NONE)
             
             Log.d(TAG, "📊 Найдено контуров: ${contours.size}")
             
-            var maxArea = 0.0
-            var pageContour: MatOfPoint? = null
+            // Простая фильтрация контуров (как в Python)
+            val rectContours = mutableListOf<MatOfPoint>()
+            
+            Log.d(TAG, "🔍 Анализируем ${contours.size} найденных контуров...")
+            
             for (contour in contours) {
                 val area = Imgproc.contourArea(contour)
-                if (area > 1000) {
+                // Очень низкий порог площади (как в Python: > 50)
+                if (area > 50) {
                     val approx = MatOfPoint2f()
                     Imgproc.approxPolyDP(MatOfPoint2f(*contour.toArray()), approx, 0.02 * Imgproc.arcLength(MatOfPoint2f(*contour.toArray()), true), true)
-                    if (approx.total() == 4L && area > maxArea) {
-                        maxArea = area
-                        pageContour = MatOfPoint(*approx.toArray())
+                    val corners = approx.total().toInt()
+                    
+                    Log.d(TAG, "📐 Контур: площадь=$area, углов=$corners")
+                    
+                    // Простая проверка - только 4 угла (как в Python)
+                    if (corners == 4) {
+                        rectContours.add(MatOfPoint(*approx.toArray()))
                         Log.d(TAG, "✅ Найден прямоугольный контур площадью: $area")
                     }
                 }
+            }
+            
+            // Сортируем по площади и берем самый большой (как в Python)
+            rectContours.sortByDescending { Imgproc.contourArea(it) }
+            
+            val pageContour = if (rectContours.isNotEmpty()) rectContours[0] else null
+            val maxArea = if (pageContour != null) Imgproc.contourArea(pageContour) else 0.0
+            
+            Log.d(TAG, "📊 Найдено прямоугольных контуров: ${rectContours.size}")
+            if (rectContours.isNotEmpty()) {
+                Log.d(TAG, "🎯 Выбран самый большой контур площадью: $maxArea")
             }
             
             if (pageContour != null) {
@@ -305,8 +336,8 @@ class ImageProcessor {
                 val pts = pageContour.toArray()
                 val sortedPts = sortPoints(pts)
                 
-                val inputWidth = inputMat.cols()
-                val inputHeight = inputMat.rows()
+                val inputWidth = resizedMat.cols()
+                val inputHeight = resizedMat.rows()
                 val dstSize = minOf(inputWidth, inputHeight)
                 val srcMat = MatOfPoint2f(*sortedPts)
                 val dstMat = MatOfPoint2f(
@@ -317,32 +348,79 @@ class ImageProcessor {
                 )
                 val perspectiveTransform = Imgproc.getPerspectiveTransform(srcMat, dstMat)
                 val warp = Mat()
-                Imgproc.warpPerspective(inputMat, warp, perspectiveTransform, Size(dstSize.toDouble(), dstSize.toDouble()))
+                Imgproc.warpPerspective(resizedMat, warp, perspectiveTransform, Size(dstSize.toDouble(), dstSize.toDouble()))
+                
+                // Создаем визуализацию с контуром и сеткой
+                val visualizationMat = resizedMat.clone()
+                
+                // Рисуем найденный контур зеленым цветом
+                Imgproc.drawContours(visualizationMat, listOf(pageContour), 0, Scalar(0.0, 255.0, 0.0), 3)
+                
+                // Рисуем сетку на перспективно преобразованном изображении
+                val gridMat = warp.clone()
+                drawGridOnMat(gridMat, questionsCount, choicesCount)
                 
                 // Обрабатываем бланк с ML с приоритетной обработкой
                 val result = processTestSheetWithPriority(warp, questionsCount, choicesCount, correctAnswers, onProgressUpdate)
                 
-                // Освобождаем ресурсы
+                // Добавляем визуализацию к результату
+                if (result != null) {
+                    // Конвертируем визуализацию в Bitmap
+                    val visualizationBitmap = Bitmap.createBitmap(visualizationMat.cols(), visualizationMat.rows(), Bitmap.Config.ARGB_8888)
+                    Utils.matToBitmap(visualizationMat, visualizationBitmap)
+                    
+                    // Конвертируем сетку в Bitmap
+                    val gridBitmap = Bitmap.createBitmap(gridMat.cols(), gridMat.rows(), Bitmap.Config.ARGB_8888)
+                    Utils.matToBitmap(gridMat, gridBitmap)
+                    
+                    // Создаем новый результат с визуализацией
+                    val resultWithVisualization = OMRResult(
+                        selectedAnswers = result.selectedAnswers,
+                        grading = result.grading,
+                        incorrectQuestions = result.incorrectQuestions,
+                        correctAnswers = result.correctAnswers,
+                        visualization = visualizationBitmap,
+                        gridVisualization = gridBitmap
+                    )
+                    
+                                    // Освобождаем ресурсы
+                visualizationMat.release()
+                gridMat.release()
                 warp.release()
                 srcMat.release()
                 dstMat.release()
                 perspectiveTransform.release()
+                adjustedMat.release()
+                resizedMat.release()
+                
+                return resultWithVisualization
+                }
+                
+                // Освобождаем ресурсы
+                visualizationMat.release()
+                gridMat.release()
+                warp.release()
+                srcMat.release()
+                dstMat.release()
+                perspectiveTransform.release()
+                adjustedMat.release()
+                resizedMat.release()
                 
                 return result
             } else {
                 Log.w(TAG, "⚠️ Контур бланка не найден! Найдено контуров: ${contours.size}, максимальная площадь: $maxArea")
-                
-                // Попробуем обработать весь кадр как бланк (fallback)
-                Log.d(TAG, "🔄 Пробуем обработать весь кадр как бланк...")
-                val result = processTestSheet(inputMat, questionsCount, choicesCount, correctAnswers)
                 
                 // Освобождаем ресурсы
                 gray.release()
                 edged.release()
                 hierarchy.release()
                 inputMat.release()
+                adjustedMat.release()
+                resizedMat.release()
                 
-                return result
+                // Возвращаем null вместо обработки всего кадра
+                Log.d(TAG, "❌ Контур не найден - пропускаем обработку")
+                return null
             }
             
             // Освобождаем ресурсы
@@ -350,6 +428,8 @@ class ImageProcessor {
             edged.release()
             hierarchy.release()
             inputMat.release()
+            adjustedMat.release()
+            resizedMat.release()
             
         } catch (e: Exception) {
             Log.e(TAG, "❌ Ошибка ML обработки кадра: ${e.message}", e)
@@ -716,6 +796,9 @@ class ImageProcessor {
             val correctCount = grading.count { it == 1 }
             Log.d(TAG, "✅ Приоритетная обработка завершена: $correctCount/$questionsCount правильных ответов")
             Log.d(TAG, "📊 Эталонных ячеек: ${referenceCells.size}, вопросов с ошибками: ${incorrectQuestions.size}")
+            Log.d(TAG, "📊 Размеры массивов: selectedAnswers=${selectedAnswers.size}, grading=${grading.size}, correctAnswers=${correctAnswers.size}")
+            Log.d(TAG, "📊 selectedAnswers: ${selectedAnswers.contentToString()}")
+            Log.d(TAG, "📊 grading: ${grading.contentToString()}")
             
             // Освобождаем ресурсы
             referenceCells.forEach { it.third.recycle() }
@@ -731,6 +814,137 @@ class ImageProcessor {
                 incorrectQuestions = emptyList(),
                 correctAnswers = correctAnswers
             )
+        }
+    }
+    
+    /**
+     * Вычисляет углы четырехугольника
+     */
+    private fun calculateAngles(points: Array<org.opencv.core.Point>): List<Double> {
+        val angles = mutableListOf<Double>()
+        
+        for (i in points.indices) {
+            val p1 = points[i]
+            val p2 = points[(i + 1) % 4]
+            val p3 = points[(i + 2) % 4]
+            
+            // Векторы
+            val v1x = p1.x - p2.x
+            val v1y = p1.y - p2.y
+            val v2x = p3.x - p2.x
+            val v2y = p3.y - p2.y
+            
+            // Скалярное произведение
+            val dot = v1x * v2x + v1y * v2y
+            
+            // Модули векторов
+            val mag1 = Math.sqrt(v1x * v1x + v1y * v1y)
+            val mag2 = Math.sqrt(v2x * v2x + v2y * v2y)
+            
+            // Косинус угла
+            val cosAngle = dot / (mag1 * mag2)
+            val cosAngleClamped = cosAngle.coerceIn(-1.0, 1.0)
+            
+            // Угол в градусах
+            val angle = Math.toDegrees(Math.acos(cosAngleClamped))
+            angles.add(angle)
+        }
+        
+        return angles
+    }
+    
+
+    
+    /**
+     * Вычисляет соотношение сторон четырехугольника
+     */
+    private fun calculateAspectRatio(points: Array<org.opencv.core.Point>): Double {
+        // Находим ширину и высоту
+        val xCoords = points.map { it.x }
+        val yCoords = points.map { it.y }
+        
+        val width = xCoords.maxOrNull()!! - xCoords.minOrNull()!!
+        val height = yCoords.maxOrNull()!! - yCoords.minOrNull()!!
+        
+        return if (height > 0) width / height else 1.0
+    }
+    
+    /**
+     * Рисует сетку на оригинальном изображении с учетом перспективы
+     */
+    private fun drawGridOnOriginalImage(mat: Mat, contour: MatOfPoint, questionsCount: Int, choicesCount: Int) {
+        val pts = contour.toArray()
+        val sortedPts = sortPoints(pts)
+        
+        // Создаем сетку на перспективно преобразованном изображении
+        val warp = Mat()
+        val srcMat = MatOfPoint2f(*sortedPts)
+        val dstSize = minOf(mat.cols(), mat.rows())
+        val dstMat = MatOfPoint2f(
+            org.opencv.core.Point(0.0, 0.0),
+            org.opencv.core.Point(dstSize - 1.0, 0.0),
+            org.opencv.core.Point(dstSize - 1.0, dstSize - 1.0),
+            org.opencv.core.Point(0.0, dstSize - 1.0)
+        )
+        val perspectiveTransform = Imgproc.getPerspectiveTransform(srcMat, dstMat)
+        Imgproc.warpPerspective(mat, warp, perspectiveTransform, Size(dstSize.toDouble(), dstSize.toDouble()))
+        
+        // Рисуем сетку на перспективно преобразованном изображении
+        drawGridOnMat(warp, questionsCount, choicesCount)
+        
+        // Обратное преобразование для отображения на оригинальном изображении
+        val inverseTransform = Imgproc.getPerspectiveTransform(dstMat, srcMat)
+        val gridOnOriginal = Mat()
+        Imgproc.warpPerspective(warp, gridOnOriginal, inverseTransform, Size(mat.cols().toDouble(), mat.rows().toDouble()))
+        
+        // Накладываем сетку на оригинальное изображение
+        Core.addWeighted(mat, 0.7, gridOnOriginal, 0.3, 0.0, mat)
+        
+        // Освобождаем ресурсы
+        warp.release()
+        srcMat.release()
+        dstMat.release()
+        perspectiveTransform.release()
+        inverseTransform.release()
+        gridOnOriginal.release()
+    }
+    
+    /**
+     * Рисует сетку на Mat изображении с номерами ячеек
+     */
+    private fun drawGridOnMat(mat: Mat, questionsCount: Int, choicesCount: Int) {
+        val cellWidth = mat.cols() / choicesCount
+        val cellHeight = mat.rows() / questionsCount
+        
+        // Рисуем вертикальные линии
+        for (i in 0..choicesCount) {
+            val x = i * cellWidth
+            Imgproc.line(mat, 
+                org.opencv.core.Point(x.toDouble(), 0.0), 
+                org.opencv.core.Point(x.toDouble(), mat.rows().toDouble()), 
+                Scalar(255.0, 0.0, 0.0), 2)
+        }
+        
+        // Рисуем горизонтальные линии
+        for (i in 0..questionsCount) {
+            val y = i * cellHeight
+            Imgproc.line(mat, 
+                org.opencv.core.Point(0.0, y.toDouble()), 
+                org.opencv.core.Point(mat.cols().toDouble(), y.toDouble()), 
+                Scalar(255.0, 0.0, 0.0), 2)
+        }
+        
+        // Добавляем номера ячеек
+        for (question in 0 until questionsCount) {
+            for (choice in 0 until choicesCount) {
+                val centerX = (choice * cellWidth) + (cellWidth / 2)
+                val centerY = (question * cellHeight) + (cellHeight / 2)
+                val cellNumber = "${question + 1}.${choice + 1}"
+                
+                Imgproc.putText(mat, cellNumber, 
+                    org.opencv.core.Point(centerX.toDouble(), centerY.toDouble()), 
+                    Imgproc.FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0.0, 0.0, 255.0), 1)
+            }
         }
     }
     

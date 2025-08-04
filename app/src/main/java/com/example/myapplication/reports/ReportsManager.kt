@@ -468,6 +468,11 @@ class ReportsManager(private val context: Context) {
         val totalQuestions = reports.firstOrNull()?.omrResult?.grading?.size ?: 0
         
         Log.d(TAG, "🔥 Создание тепловой карты: $totalQuestions вопросов, $totalWorks работ")
+        Log.d(TAG, "🔥 Первый отчет: grading.size = ${reports.firstOrNull()?.omrResult?.grading?.size}")
+        Log.d(TAG, "🔥 Все отчеты:")
+        reports.forEachIndexed { index, report ->
+            Log.d(TAG, "🔥   Отчет $index: grading.size = ${report.omrResult.grading.size}, grading = ${report.omrResult.grading.contentToString()}")
+        }
         
         if (totalQuestions > 0) {
             for (question in 1..totalQuestions) {

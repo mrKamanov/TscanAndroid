@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@color/background">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Визуализация обработки"
+        android:textSize="18sp"
+        android:textColor="@color/text_inverse"
+        android:fontFamily="@font/krabuler"
+        android:gravity="center"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Найденный контур (зеленая рамка):"
+        android:textSize="14sp"
+        android:textColor="@color/text_secondary"
+        android:fontFamily="@font/krabuler"
+        android:layout_marginBottom="8dp" />
+
+    <ImageView
+        android:id="@+id/iv_contour_image"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:scaleType="fitCenter"
+        android:background="@drawable/edit_text_background"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Сетка обработки (красные линии):"
+        android:textSize="14sp"
+        android:textColor="@color/text_secondary"
+        android:fontFamily="@font/krabuler"
+        android:layout_marginBottom="8dp" />
+
+    <ImageView
+        android:id="@+id/iv_grid_image"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:scaleType="fitCenter"
+        android:background="@drawable/edit_text_background"
+        android:layout_marginBottom="16dp" />
+
+    <Button
+        android:id="@+id/btn_close"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Закрыть"
+        android:textColor="@color/text_inverse"
+        android:fontFamily="@font/krabuler"
+        android:background="@drawable/apply_settings_button"
+        android:layout_marginTop="8dp" />
+
+</LinearLayout> 

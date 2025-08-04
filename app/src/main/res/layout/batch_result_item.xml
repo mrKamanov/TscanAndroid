@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="8dp"
+    app:cardBackgroundColor="@color/card_background"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="2dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="12dp">
+
+        <!-- Превью изображения -->
+        <ImageView
+            android:id="@+id/iv_preview"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:scaleType="centerCrop"
+            android:background="@drawable/edit_text_background"
+            android:layout_marginEnd="12dp" />
+
+        <!-- Информация о результате -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/tv_filename"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="test_image.jpg"
+                android:textColor="@color/text_inverse"
+                android:textStyle="bold"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:id="@+id/tv_score"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="4/5 (80%)"
+                android:textColor="@color/success_green"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:id="@+id/tv_grade"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Оценка: 4"
+                android:textColor="@color/primary_blue"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:id="@+id/tv_errors"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Ошибки: Вопрос 2"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <!-- Кнопка подробностей -->
+        <Button
+            android:id="@+id/btn_details"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Подробнее"
+            android:textColor="@color/text_inverse"
+            android:background="@drawable/batch_button_primary"
+            android:padding="12dp"
+            android:layout_gravity="center_vertical" />
+    </LinearLayout>
+</androidx.cardview.widget.CardView> 
