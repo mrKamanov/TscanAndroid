@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Кастомный бегунок (thumb) для ползунка -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <!-- Нажатое состояние -->
+    <item android:state_pressed="true">
+        <shape android:shape="oval">
+            <solid android:color="#FFFFFF" />
+            <stroke 
+                android:width="3dp" 
+                android:color="#16A34A" />
+            <size 
+                android:width="24dp" 
+                android:height="24dp" />
+        </shape>
+    </item>
+    
+    <!-- Обычное состояние -->
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="#FFFFFF" />
+            <stroke 
+                android:width="2dp" 
+                android:color="#CBD5E1" />
+            <size 
+                android:width="20dp" 
+                android:height="20dp" />
+        </shape>
+    </item>
+</selector>

@@ -65,15 +65,31 @@
                 android:textSize="12sp" />
         </LinearLayout>
 
-        <!-- Кнопка подробностей -->
-        <Button
+        <!-- ========== КНОПКА В ЕДИНОМ ОВАЛЬНОМ СТИЛЕ (ИСПРАВЛЕННАЯ) ========== -->
+        <!-- Кнопка Подробнее (серая овальная компактная) -->
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_details"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="36dp"
             android:text="Подробнее"
-            android:textColor="@color/text_inverse"
-            android:background="@drawable/batch_button_primary"
-            android:padding="12dp"
-            android:layout_gravity="center_vertical" />
+            android:textColor="#CBD5E1"
+            android:textStyle="bold"
+            android:textSize="12sp"
+            android:fontFamily="@font/krabuler"
+            android:backgroundTint="#1E293B"
+            app:cornerRadius="18dp"
+            app:strokeColor="#475569"
+            app:strokeWidth="1dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:layout_gravity="center_vertical"
+            android:elevation="0dp"
+            android:stateListAnimator="@null"
+            app:iconPadding="0dp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:layout_marginStart="8dp"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:contentDescription="Показать подробности результата" />
     </LinearLayout>
-</androidx.cardview.widget.CardView> 
+</androidx.cardview.widget.CardView>

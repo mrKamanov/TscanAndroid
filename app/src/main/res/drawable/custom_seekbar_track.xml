@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ========== res/drawable/custom_seekbar_track.xml ========== -->
+<!-- Кастомный трек для ползунка -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Фоновый трек -->
+    <item android:id="@android:id/background">
+        <shape android:shape="rectangle">
+            <solid android:color="#475569" />
+            <corners android:radius="8dp" />
+        </shape>
+    </item>
+    
+    <!-- Заполненная часть -->
+    <item android:id="@android:id/progress">
+        <clip>
+            <shape android:shape="rectangle">
+                <gradient
+                    android:startColor="#16A34A"
+                    android:endColor="#22C55E"
+                    android:type="linear" />
+                <corners android:radius="8dp" />
+            </shape>
+        </clip>
+    </item>
+</layer-list>

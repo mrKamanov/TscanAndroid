@@ -19,23 +19,33 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-        android:text="Пакетная обработка"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:textColor="@color/text_inverse"
+            android:text="Пакетная обработка"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_inverse"
             android:fontFamily="@font/krabuler" />
 
-        <Button
+        <!-- Кнопка "Начать заново" (серая овальная) -->
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_reset"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="48dp"
+            android:layout_marginStart="8dp"
             android:text="Начать заново"
-            android:textColor="@color/text_inverse"
+            android:textColor="#CBD5E1"
+            android:textStyle="bold"
             android:textSize="14sp"
             android:fontFamily="@font/krabuler"
-            android:background="@drawable/batch_button_secondary"
-            android:padding="12dp"
-            android:layout_marginStart="8dp" />
+            android:backgroundTint="#1E293B"
+            app:cornerRadius="24dp"
+            app:strokeColor="#475569"
+            app:strokeWidth="2dp"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:elevation="0dp"
+            android:stateListAnimator="@null"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:contentDescription="Начать заново пакетную обработку" />
     </LinearLayout>
 
     <!-- Основной контент -->
@@ -146,59 +156,89 @@
                         android:textColor="@color/text_secondary"
                         android:layout_marginBottom="8dp" />
 
+                    <!-- Кнопки управления критериями (все в едином овальном стиле) -->
                     <LinearLayout
                         android:id="@+id/layout_correct_answers"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:minHeight="200dp" />
+                        android:minHeight="200dp"
+                        android:orientation="vertical" />
 
-                    <!-- Кнопки управления критериями -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:layout_marginTop="12dp">
 
-                        <Button
-                            android:id="@+id/btn_apply_criteria"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Применить"
-                            android:textColor="@color/text_inverse"
-                            android:textSize="14sp"
-                            android:fontFamily="@font/krabuler"
-                            android:background="@drawable/batch_button_success"
-                            android:padding="12dp"
-                            android:layout_marginEnd="4dp" />
+                                                 <!-- Кнопка "Применить" (зеленая овальная) -->
+                         <com.google.android.material.button.MaterialButton
+                             android:id="@+id/btn_apply_criteria"
+                             android:layout_width="0dp"
+                             android:layout_height="48dp"
+                             android:layout_weight="1"
+                             android:layout_marginEnd="4dp"
+                             android:text="Применить"
+                             android:textColor="#FFFFFF"
+                             android:textStyle="bold"
+                             android:textSize="11sp"
+                             android:fontFamily="@font/krabuler"
+                             android:backgroundTint="#16A34A"
+                             app:cornerRadius="24dp"
+                             app:strokeColor="#475569"
+                             app:strokeWidth="2dp"
+                             android:paddingStart="8dp"
+                             android:paddingEnd="8dp"
+                             android:elevation="0dp"
+                             android:stateListAnimator="@null"
+                             style="@style/Widget.MaterialComponents.Button"
+                             android:contentDescription="Применить критерии" />
 
-                        <Button
-                            android:id="@+id/btn_save_criteria"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Сохранить"
-                            android:textColor="@color/text_inverse"
-                            android:textSize="14sp"
-                            android:fontFamily="@font/krabuler"
-                            android:background="@drawable/batch_button_primary"
-                            android:padding="12dp"
-                            android:layout_marginStart="4dp"
-                            android:layout_marginEnd="4dp" />
+                                                 <!-- Кнопка "Сохранить" (синяя овальная) -->
+                         <com.google.android.material.button.MaterialButton
+                             android:id="@+id/btn_save_criteria"
+                             android:layout_width="0dp"
+                             android:layout_height="48dp"
+                             android:layout_weight="1"
+                             android:layout_marginStart="4dp"
+                             android:layout_marginEnd="4dp"
+                             android:text="Сохранить"
+                             android:textColor="#FFFFFF"
+                             android:textStyle="bold"
+                             android:textSize="11sp"
+                             android:fontFamily="@font/krabuler"
+                             android:backgroundTint="#1E293B"
+                             app:cornerRadius="24dp"
+                             app:strokeColor="#475569"
+                             app:strokeWidth="2dp"
+                             android:paddingStart="8dp"
+                             android:paddingEnd="8dp"
+                             android:elevation="0dp"
+                             android:stateListAnimator="@null"
+                             style="@style/Widget.MaterialComponents.Button"
+                             android:contentDescription="Сохранить критерии" />
 
-                        <Button
-                            android:id="@+id/btn_load_criteria"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Загрузить"
-                            android:textColor="@color/text_inverse"
-                            android:textSize="14sp"
-                            android:fontFamily="@font/krabuler"
-                            android:background="@drawable/batch_button_secondary"
-                            android:padding="12dp"
-                            android:layout_marginStart="4dp" />
+                                                 <!-- Кнопка "Загрузить" (серая овальная) -->
+                         <com.google.android.material.button.MaterialButton
+                             android:id="@+id/btn_load_criteria"
+                             android:layout_width="0dp"
+                             android:layout_height="48dp"
+                             android:layout_weight="1"
+                             android:layout_marginStart="4dp"
+                             android:text="Загрузить"
+                             android:textColor="#CBD5E1"
+                             android:textStyle="bold"
+                             android:textSize="11sp"
+                             android:fontFamily="@font/krabuler"
+                             android:backgroundTint="#1E293B"
+                             app:cornerRadius="24dp"
+                             app:strokeColor="#475569"
+                             app:strokeWidth="2dp"
+                             android:paddingStart="8dp"
+                             android:paddingEnd="8dp"
+                             android:elevation="0dp"
+                             android:stateListAnimator="@null"
+                             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                             android:contentDescription="Загрузить критерии" />
                     </LinearLayout>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -228,29 +268,49 @@
                         android:fontFamily="@font/krabuler"
                         android:layout_marginBottom="12dp" />
 
-                    <Button
-                        android:id="@+id/btn_select_images"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Выбрать изображения"
-                        android:textColor="@color/text_inverse"
-                        android:textSize="16sp"
-                        android:fontFamily="@font/krabuler"
-                        android:background="@drawable/batch_button_primary"
-                        android:padding="16dp"
-                        android:layout_marginBottom="8dp" />
+                                         <!-- Кнопка "Выбрать изображения" (синяя овальная) -->
+                     <com.google.android.material.button.MaterialButton
+                         android:id="@+id/btn_select_images"
+                         android:layout_width="match_parent"
+                         android:layout_height="48dp"
+                         android:layout_marginBottom="8dp"
+                         android:text="Выбрать изображения"
+                         android:textColor="#FFFFFF"
+                         android:textStyle="bold"
+                         android:textSize="14sp"
+                         android:fontFamily="@font/krabuler"
+                         android:backgroundTint="#1E293B"
+                         app:cornerRadius="24dp"
+                         app:strokeColor="#475569"
+                         app:strokeWidth="2dp"
+                         android:paddingStart="16dp"
+                         android:paddingEnd="16dp"
+                         android:elevation="0dp"
+                         android:stateListAnimator="@null"
+                         style="@style/Widget.MaterialComponents.Button"
+                         android:contentDescription="Выбрать изображения для обработки" />
 
-                    <Button
-                        android:id="@+id/btn_camera"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="📷 Фотографировать"
-                        android:textColor="@color/text_inverse"
-                        android:textSize="16sp"
-                        android:fontFamily="@font/krabuler"
-                        android:background="@drawable/batch_button_success"
-                        android:padding="16dp"
-                        android:layout_marginBottom="8dp" />
+                                         <!-- Кнопка "Фотографировать" (зеленая овальная) -->
+                     <com.google.android.material.button.MaterialButton
+                         android:id="@+id/btn_camera"
+                         android:layout_width="match_parent"
+                         android:layout_height="48dp"
+                         android:layout_marginBottom="8dp"
+                         android:text="📷 Фотографировать"
+                         android:textColor="#FFFFFF"
+                         android:textStyle="bold"
+                         android:textSize="14sp"
+                         android:fontFamily="@font/krabuler"
+                         android:backgroundTint="#1E293B"
+                         app:cornerRadius="24dp"
+                         app:strokeColor="#475569"
+                         app:strokeWidth="2dp"
+                         android:paddingStart="16dp"
+                         android:paddingEnd="16dp"
+                         android:elevation="0dp"
+                         android:stateListAnimator="@null"
+                         style="@style/Widget.MaterialComponents.Button"
+                         android:contentDescription="Сделать фотографию для обработки" />
 
                     <TextView
                         android:id="@+id/tv_selected_count"
@@ -262,19 +322,28 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- Кнопка обработки -->
-            <Button
-                android:id="@+id/btn_process"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Начать обработку"
-                android:textColor="@color/text_inverse"
-                android:textSize="16sp"
-                android:fontFamily="@font/krabuler"
-                android:background="@drawable/batch_button_success"
-                android:padding="16dp"
-                android:layout_marginBottom="16dp"
-                android:enabled="false" />
+                         <!-- Кнопка "Начать обработку" (зеленая овальная) -->
+             <com.google.android.material.button.MaterialButton
+                 android:id="@+id/btn_process"
+                 android:layout_width="match_parent"
+                 android:layout_height="48dp"
+                 android:layout_marginBottom="16dp"
+                 android:text="Начать обработку"
+                 android:textColor="#FFFFFF"
+                 android:textStyle="bold"
+                 android:textSize="14sp"
+                 android:fontFamily="@font/krabuler"
+                 android:backgroundTint="#16A34A"
+                 app:cornerRadius="24dp"
+                 app:strokeColor="#475569"
+                 app:strokeWidth="2dp"
+                 android:paddingStart="16dp"
+                 android:paddingEnd="16dp"
+                 android:elevation="0dp"
+                 android:stateListAnimator="@null"
+                 style="@style/Widget.MaterialComponents.Button"
+                 android:contentDescription="Начать пакетную обработку изображений"
+                 android:enabled="false" />
 
             <!-- Прогресс обработки -->
             <androidx.cardview.widget.CardView
@@ -354,19 +423,28 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- Кнопка добавления всех результатов в отчет -->
-            <Button
-                android:id="@+id/btn_add_all_to_report"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Добавить все в отчет"
-                android:textColor="@color/text_inverse"
-                android:textSize="16sp"
-                android:fontFamily="@font/krabuler"
-                android:background="@drawable/batch_button_primary"
-                android:padding="16dp"
-                android:layout_marginTop="16dp"
-                android:enabled="false" />
+                         <!-- Кнопка "Добавить все в отчет" (синяя овальная) -->
+             <com.google.android.material.button.MaterialButton
+                 android:id="@+id/btn_add_all_to_report"
+                 android:layout_width="match_parent"
+                 android:layout_height="48dp"
+                 android:layout_marginTop="16dp"
+                 android:text="Добавить все в отчет"
+                 android:textColor="#FFFFFF"
+                 android:textStyle="bold"
+                 android:textSize="14sp"
+                 android:fontFamily="@font/krabuler"
+                 android:backgroundTint="#1E293B"
+                 app:cornerRadius="24dp"
+                 app:strokeColor="#475569"
+                 app:strokeWidth="2dp"
+                 android:paddingStart="16dp"
+                 android:paddingEnd="16dp"
+                 android:elevation="0dp"
+                 android:stateListAnimator="@null"
+                 style="@style/Widget.MaterialComponents.Button"
+                 android:contentDescription="Добавить все результаты в отчет"
+                 android:enabled="false" />
         </LinearLayout>
     </ScrollView>
-</LinearLayout> 
+</LinearLayout>

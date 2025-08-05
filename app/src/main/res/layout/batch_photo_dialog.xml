@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
@@ -33,49 +34,93 @@
         android:background="@drawable/edit_text_background"
         android:layout_marginBottom="16dp" />
 
+    <!-- ========== ТРИ КНОПКИ В ЕДИНОМ ОВАЛЬНОМ СТИЛЕ (ИСПРАВЛЕННЫЕ) ========== -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp">
 
-        <Button
+        <!-- Кнопка Переснять (серая овальная) -->
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_retake"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="48dp"
             android:layout_weight="1"
-            android:text="Переснять"
-            android:textColor="@color/text_inverse"
-            android:textSize="14sp"
+            android:text="ПЕРЕСНЯТЬ"
+            android:textColor="#CBD5E1"
+            android:textStyle="bold"
+            android:textSize="12sp"
             android:fontFamily="@font/krabuler"
-            android:background="@drawable/batch_button_secondary"
-            android:padding="12dp"
-            android:layout_marginEnd="4dp" />
+            android:backgroundTint="#1E293B"
+            app:cornerRadius="24dp"
+            app:strokeColor="#475569"
+            app:strokeWidth="1dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:layout_marginEnd="4dp"
+            android:elevation="0dp"
+            android:stateListAnimator="@null"
+            app:iconPadding="0dp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:contentDescription="Переснять фотографию" />
 
-        <Button
+        <!-- Кнопка Добавить (зеленая овальная) -->
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_add_photo"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="48dp"
             android:layout_weight="1"
-            android:text="Добавить"
-            android:textColor="@color/text_inverse"
-            android:textSize="14sp"
+            android:text="ДОБАВИТЬ"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:textSize="12sp"
             android:fontFamily="@font/krabuler"
-            android:background="@drawable/batch_button_success"
-            android:padding="12dp"
+            android:backgroundTint="#16A34A"
+            app:cornerRadius="24dp"
+            app:strokeColor="#475569"
+            app:strokeWidth="1dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
             android:layout_marginStart="4dp"
-            android:layout_marginEnd="4dp" />
+            android:layout_marginEnd="4dp"
+            android:elevation="0dp"
+            android:stateListAnimator="@null"
+            app:iconPadding="0dp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            style="@style/Widget.MaterialComponents.Button"
+            android:contentDescription="Добавить фотографию в отчет" />
 
-        <Button
+        <!-- Кнопка Завершить (красная овальная) -->
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_finish_camera"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="48dp"
             android:layout_weight="1"
-            android:text="Завершить"
-            android:textColor="@color/text_inverse"
-            android:textSize="14sp"
+            android:text="ЗАВЕРШИТЬ"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:textSize="12sp"
             android:fontFamily="@font/krabuler"
-            android:background="@drawable/batch_button_primary"
-            android:padding="12dp"
-            android:layout_marginStart="4dp" />
+            android:backgroundTint="#DC2626"
+            app:cornerRadius="24dp"
+            app:strokeColor="#475569"
+            app:strokeWidth="1dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:layout_marginStart="4dp"
+            android:elevation="0dp"
+            android:stateListAnimator="@null"
+            app:iconPadding="0dp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            style="@style/Widget.MaterialComponents.Button"
+            android:contentDescription="Завершить фотографирование" />
     </LinearLayout>
-</LinearLayout> 
+
+</LinearLayout>

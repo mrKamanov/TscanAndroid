@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
@@ -13,7 +14,7 @@
         android:layout_gravity="center_horizontal"
         android:layout_marginBottom="16dp"
         android:src="@drawable/ic_check_circle"
-        android:tint="@color/success_green" />
+        app:tint="@color/success_green" />
 
     <!-- Заголовок -->
     <TextView
@@ -37,46 +38,82 @@
         android:gravity="center"
         android:layout_marginBottom="24dp" />
 
-    <!-- Кнопки -->
+    <!-- ========== ДВЕ КНОПКИ В ЕДИНОМ ОВАЛЬНОМ СТИЛЕ ========== -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center">
 
-        <Button
+        <!-- Кнопка Открыть папку (синяя овальная) -->
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_open_file"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="48dp"
             android:layout_weight="1"
             android:layout_marginEnd="8dp"
             android:text="📂 Открыть папку"
-            android:textColor="@android:color/white"
-            android:backgroundTint="@color/accent"
-            android:textSize="12sp" />
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:fontFamily="@font/krabuler"
+            android:backgroundTint="#2563EB"
+            app:cornerRadius="24dp"
+            app:strokeColor="#475569"
+            app:strokeWidth="2dp"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:elevation="0dp"
+            android:stateListAnimator="@null"
+            style="@style/Widget.MaterialComponents.Button"
+            android:contentDescription="Открыть папку" />
 
-        <Button
+        <!-- Кнопка Отправить (зеленая овальная) -->
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_share_file"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="48dp"
             android:layout_weight="1"
             android:layout_marginStart="8dp"
             android:text="📤 Отправить"
-            android:textColor="@android:color/white"
-            android:backgroundTint="@color/success_green"
-            android:textSize="12sp" />
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:fontFamily="@font/krabuler"
+            android:backgroundTint="#16A34A"
+            app:cornerRadius="24dp"
+            app:strokeColor="#475569"
+            app:strokeWidth="2dp"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:elevation="0dp"
+            android:stateListAnimator="@null"
+            style="@style/Widget.MaterialComponents.Button"
+            android:contentDescription="Отправить экспортированный файл" />
 
     </LinearLayout>
 
-    <Button
+    <!-- ========== КНОПКА ЗАКРЫТЬ В ЕДИНОМ ОВАЛЬНОМ СТИЛЕ ========== -->
+    <!-- Кнопка Закрыть (серая овальная outline) -->
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_close"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="48dp"
         android:layout_marginTop="16dp"
         android:text="Закрыть"
-        android:textColor="@color/text_secondary"
-        android:backgroundTint="@android:color/transparent"
-        android:textSize="14sp"
-        style="@style/Widget.AppCompat.Button.Borderless" />
+        android:textColor="#CBD5E1"
+        android:textStyle="bold"
+        android:textSize="16sp"
+        android:fontFamily="@font/krabuler"
+        android:backgroundTint="#1E293B"
+        app:cornerRadius="24dp"
+        app:strokeColor="#475569"
+        app:strokeWidth="2dp"
+        android:paddingStart="32dp"
+        android:paddingEnd="32dp"
+        android:elevation="0dp"
+        android:stateListAnimator="@null"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:contentDescription="Закрыть диалог экспорта" />
 
-</LinearLayout> 
+</LinearLayout>

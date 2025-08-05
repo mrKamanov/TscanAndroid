@@ -104,7 +104,7 @@
             </androidx.cardview.widget.CardView>
         </LinearLayout>
 
-        <!-- Панель управления под видеопотоком (только иконки) -->
+        <!-- ========== ПАНЕЛЬ УПРАВЛЕНИЯ С КРУГЛЫМИ КНОПКАМИ ========== -->
         <LinearLayout
             android:id="@+id/video_controls_layout"
             android:layout_width="match_parent"
@@ -112,100 +112,147 @@
             android:orientation="horizontal"
             android:gravity="center"
             android:layout_gravity="bottom"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
+            android:paddingStart="24dp"
+            android:paddingEnd="24dp"
             android:layout_marginTop="16dp"
             android:layout_marginBottom="16dp">
 
+            <!-- Обновить ответы -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_update_answers"
-                android:layout_width="0dp"
-                android:layout_height="64dp"
-                android:layout_weight="1"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:layout_weight="0"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:insetLeft="0dp"
+                android:insetRight="0dp"
+                android:padding="0dp"
                 app:icon="@drawable/update_answers_button"
+                app:iconTint="#CBD5E1"
+                app:iconGravity="textStart"
                 app:iconSize="32dp"
-                app:iconTint="@color/text_inverse"
-                app:iconGravity="textTop"
-                android:backgroundTint="@color/primary"
-                app:cornerRadius="16dp"
-                app:strokeColor="@color/text_inverse"
+                app:iconPadding="0dp"
+                android:backgroundTint="#1E293B"
+                app:cornerRadius="28dp"
+                app:strokeColor="#475569"
                 app:strokeWidth="2dp"
-                android:layout_marginEnd="8dp"
-                style="@style/Widget.MaterialComponents.Button.Icon"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                android:elevation="0dp"
+                android:stateListAnimator="@null"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:contentDescription="@string/update_answers_button" />
 
+            <!-- Добавить в отчет -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_add_to_report"
-                android:layout_width="0dp"
-                android:layout_height="64dp"
-                android:layout_weight="1"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:layout_weight="0"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:insetLeft="0dp"
+                android:insetRight="0dp"
+                android:padding="0dp"
                 app:icon="@drawable/add_to_report_button"
+                app:iconTint="#FFFFFF"
+                app:iconGravity="textStart"
                 app:iconSize="32dp"
-                app:iconTint="@color/text_inverse"
-                app:iconGravity="textTop"
-                android:backgroundTint="@color/success"
-                app:cornerRadius="16dp"
-                app:strokeColor="@color/text_inverse"
+                app:iconPadding="0dp"
+                android:backgroundTint="#16A34A"
+                app:cornerRadius="28dp"
+                app:strokeColor="#475569"
                 app:strokeWidth="2dp"
-                android:layout_marginEnd="8dp"
-                style="@style/Widget.MaterialComponents.Button.Icon"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                android:elevation="0dp"
+                android:stateListAnimator="@null"
+                style="@style/Widget.MaterialComponents.Button"
                 android:contentDescription="@string/add_to_report_button" />
 
+            <!-- Показать сетку -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_toggle_grid"
-                android:layout_width="0dp"
-                android:layout_height="64dp"
-                android:layout_weight="1"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:layout_weight="0"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:insetLeft="0dp"
+                android:insetRight="0dp"
+                android:padding="0dp"
                 app:icon="@drawable/ic_grid_on"
+                app:iconTint="#CBD5E1"
+                app:iconGravity="textStart"
                 app:iconSize="32dp"
-                app:iconTint="@color/text_inverse"
-                app:iconGravity="textTop"
-                android:backgroundTint="@color/secondary"
-                app:cornerRadius="16dp"
-                app:strokeColor="@color/text_inverse"
+                app:iconPadding="0dp"
+                android:backgroundTint="#1E293B"
+                app:cornerRadius="28dp"
+                app:strokeColor="#475569"
                 app:strokeWidth="2dp"
-                android:layout_marginEnd="8dp"
-                style="@style/Widget.MaterialComponents.Button.Icon"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                android:elevation="0dp"
+                android:stateListAnimator="@null"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:contentDescription="@string/toggle_grid_button" />
 
-            <!-- Кнопка "Включить проверку" -->
+            <!-- Включить проверку -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_toggle_processing"
-                android:layout_width="0dp"
-                android:layout_height="64dp"
-                android:layout_weight="1"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:layout_weight="0"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:insetLeft="0dp"
+                android:insetRight="0dp"
+                android:padding="0dp"
                 app:icon="@drawable/ic_check_circle"
+                app:iconTint="#FFFFFF"
+                app:iconGravity="textStart"
                 app:iconSize="32dp"
-                app:iconTint="@color/text_inverse"
-                app:iconGravity="textTop"
-                android:backgroundTint="@color/success"
-                app:cornerRadius="16dp"
-                app:strokeColor="@color/text_inverse"
+                app:iconPadding="0dp"
+                android:backgroundTint="#16A34A"
+                app:cornerRadius="28dp"
+                app:strokeColor="#475569"
                 app:strokeWidth="2dp"
-                android:layout_marginEnd="8dp"
-                style="@style/Widget.MaterialComponents.Button.Icon"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                android:elevation="0dp"
+                android:stateListAnimator="@null"
+                style="@style/Widget.MaterialComponents.Button"
                 android:contentDescription="Показать/скрыть результаты" />
 
-
-
+            <!-- Настройки камеры -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_camera_settings"
-                android:layout_width="0dp"
-                android:layout_height="64dp"
-                android:layout_weight="1"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:layout_weight="0"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:insetLeft="0dp"
+                android:insetRight="0dp"
+                android:padding="0dp"
                 app:icon="@drawable/camera_settings_button"
+                app:iconTint="#CBD5E1"
+                app:iconGravity="textStart"
                 app:iconSize="32dp"
-                app:iconTint="@color/text_inverse"
-                app:iconGravity="textTop"
-                android:backgroundTint="@color/primary"
-                app:cornerRadius="16dp"
-                app:strokeColor="@color/text_inverse"
+                app:iconPadding="0dp"
+                android:backgroundTint="#1E293B"
+                app:cornerRadius="28dp"
+                app:strokeColor="#475569"
                 app:strokeWidth="2dp"
-                android:layout_marginEnd="8dp"
-                style="@style/Widget.MaterialComponents.Button.Icon"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                android:elevation="0dp"
+                android:stateListAnimator="@null"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:contentDescription="@string/camera_settings_button" />
         </LinearLayout>
-        
+
         <!-- Система уведомлений -->
         <FrameLayout
             android:id="@+id/notification_container"
@@ -214,7 +261,7 @@
             android:layout_gravity="top|center_horizontal"
             android:layout_marginTop="80dp"
             android:visibility="gone">
-            
+
             <androidx.cardview.widget.CardView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -222,7 +269,7 @@
                 app:cardCornerRadius="12dp"
                 app:cardElevation="8dp"
                 app:cardBackgroundColor="@color/success">
-                
+
                 <TextView
                     android:id="@+id/notification_text"
                     android:layout_width="wrap_content"
@@ -241,7 +288,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:visibility="gone">
-            
+
             <androidx.cardview.widget.CardView
                 android:layout_width="300dp"
                 android:layout_height="wrap_content"
@@ -249,14 +296,14 @@
                 app:cardCornerRadius="16dp"
                 app:cardElevation="12dp"
                 app:cardBackgroundColor="@color/surface">
-                
+
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:padding="20dp"
                     android:gravity="center">
-                    
+
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -266,7 +313,7 @@
                         android:textStyle="bold"
                         android:fontFamily="@font/krabuler"
                         android:layout_marginBottom="16dp" />
-                    
+
                     <ProgressBar
                         android:id="@+id/ml_progress_bar"
                         style="?android:attr/progressBarStyleHorizontal"
@@ -276,7 +323,7 @@
                         android:progress="0"
                         android:max="100"
                         android:progressTint="@color/accent" />
-                    
+
                     <TextView
                         android:id="@+id/ml_progress_text"
                         android:layout_width="wrap_content"
@@ -285,12 +332,12 @@
                         android:textColor="@color/text"
                         android:textSize="14sp"
                         android:fontFamily="@font/krabuler" />
-                    
+
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
         </FrameLayout>
 
-        <!-- Кнопка "Стоп-кадр" в стиле фотокамеры -->
+        <!-- ========== КНОПКА "СТОП-КАДР" В КРУГЛОМ СТИЛЕ ========== -->
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -298,21 +345,29 @@
             android:layout_gravity="bottom|center_horizontal"
             android:layout_marginBottom="120dp">
 
+            <!-- Большая круглая кнопка стоп-кадр -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_stop_frame"
-                android:layout_width="90dp"
-                android:layout_height="90dp"
+                android:layout_width="96dp"
+                android:layout_height="96dp"
                 android:layout_gravity="center"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:insetLeft="0dp"
+                android:insetRight="0dp"
+                android:padding="0dp"
                 app:icon="@drawable/stop_frame_button"
-                app:iconSize="70dp"
-                app:iconTint="@color/text_inverse"
-                app:iconGravity="textTop"
-                android:backgroundTint="@color/accent"
-                app:cornerRadius="45dp"
-                app:strokeColor="@color/text_inverse"
+                app:iconSize="56dp"
+                app:iconTint="#FFFFFF"
+                app:iconGravity="textStart"
+                app:iconPadding="0dp"
+                android:backgroundTint="#DC2626"
+                app:cornerRadius="48dp"
+                app:strokeColor="#475569"
                 app:strokeWidth="3dp"
-                app:elevation="8dp"
-                style="@style/Widget.MaterialComponents.Button.Icon"
+                android:elevation="0dp"
+                android:stateListAnimator="@null"
+                style="@style/Widget.MaterialComponents.Button"
                 android:contentDescription="Остановить кадр и запустить ML обработку" />
 
         </FrameLayout>

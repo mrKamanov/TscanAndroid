@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
@@ -34,35 +35,57 @@
         android:padding="12dp"
         android:layout_marginBottom="16dp" />
 
+    <!-- ========== ДВЕ КНОПКИ В ЕДИНОМ ОВАЛЬНОМ СТИЛЕ ========== -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
 
-        <Button
+        <!-- Кнопка Отмена (серая овальная как в шаблоне) -->
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_cancel"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="48dp"
             android:layout_weight="1"
             android:text="Отмена"
-            android:textColor="@color/text_inverse"
+            android:textColor="#CBD5E1"
+            android:textStyle="bold"
             android:textSize="14sp"
             android:fontFamily="@font/krabuler"
-            android:background="@drawable/batch_button_secondary"
-            android:padding="12dp"
-            android:layout_marginEnd="4dp" />
+            android:backgroundTint="#1E293B"
+            app:cornerRadius="24dp"
+            app:strokeColor="#475569"
+            app:strokeWidth="2dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:layout_marginEnd="8dp"
+            android:elevation="0dp"
+            android:stateListAnimator="@null"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:contentDescription="Отменить сохранение критериев" />
 
-        <Button
+        <!-- Кнопка Сохранить (зеленая овальная как в шаблоне) -->
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_save"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="48dp"
             android:layout_weight="1"
             android:text="Сохранить"
-            android:textColor="@color/text_inverse"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
             android:textSize="14sp"
             android:fontFamily="@font/krabuler"
-            android:background="@drawable/batch_button_success"
-            android:padding="12dp"
-            android:layout_marginStart="4dp" />
+            android:backgroundTint="#16A34A"
+            app:cornerRadius="24dp"
+            app:strokeColor="#475569"
+            app:strokeWidth="2dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:layout_marginStart="8dp"
+            android:elevation="0dp"
+            android:stateListAnimator="@null"
+            style="@style/Widget.MaterialComponents.Button"
+            android:contentDescription="Сохранить критерии под введенным названием" />
     </LinearLayout>
-</LinearLayout> 
+
+</LinearLayout>

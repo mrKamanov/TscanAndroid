@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
@@ -201,36 +202,58 @@
 
     </LinearLayout>
 
-    <!-- Кнопки -->
+    <!-- ========== ДВЕ КНОПКИ В ЕДИНОМ ОВАЛЬНОМ СТИЛЕ ========== -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
 
-        <Button
+        <!-- Кнопка Отмена (серая овальная outline) -->
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_cancel"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="48dp"
             android:layout_weight="1"
+            android:layout_marginEnd="8dp"
             android:text="Отмена"
+            android:textColor="#CBD5E1"
+            android:textStyle="bold"
             android:textSize="14sp"
-            android:background="@drawable/close_settings_button"
-            android:textColor="@color/white"
             android:fontFamily="@font/krabuler"
-            android:layout_marginEnd="8dp" />
+            android:backgroundTint="#1E293B"
+            app:cornerRadius="24dp"
+            app:strokeColor="#475569"
+            app:strokeWidth="2dp"
+            android:paddingStart="24dp"
+            android:paddingEnd="24dp"
+            android:elevation="0dp"
+            android:stateListAnimator="@null"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:contentDescription="Отменить добавление критериев" />
 
-        <Button
+        <!-- Кнопка Сохранить (зеленая овальная) -->
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_save"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="48dp"
             android:layout_weight="1"
+            android:layout_marginStart="8dp"
             android:text="Сохранить"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
             android:textSize="14sp"
-            android:background="@drawable/apply_settings_button"
-            android:textColor="@color/white"
             android:fontFamily="@font/krabuler"
-            android:layout_marginStart="8dp" />
+            android:backgroundTint="#16A34A"
+            app:cornerRadius="24dp"
+            app:strokeColor="#475569"
+            app:strokeWidth="2dp"
+            android:paddingStart="24dp"
+            android:paddingEnd="24dp"
+            android:elevation="0dp"
+            android:stateListAnimator="@null"
+            style="@style/Widget.MaterialComponents.Button"
+            android:contentDescription="Сохранить новые критерии" />
 
     </LinearLayout>
 
-</LinearLayout> 
+</LinearLayout>

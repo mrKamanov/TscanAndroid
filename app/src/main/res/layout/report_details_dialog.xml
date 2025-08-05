@@ -19,8 +19,8 @@
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:src="@drawable/ic_description"
-            android:tint="@color/white"
-            android:layout_marginEnd="12dp" />
+            android:layout_marginEnd="12dp"
+            app:tint="@color/white" />
 
         <TextView
             android:id="@+id/tv_report_title"
@@ -233,15 +233,26 @@
 
     </androidx.cardview.widget.CardView>
 
-    <!-- Кнопка закрытия -->
-    <Button
+    <!-- ========== КНОПКА ЗАКРЫТЬ В ЕДИНОМ ОВАЛЬНОМ СТИЛЕ ========== -->
+    <!-- Кнопка Закрыть (серая овальная как в шаблоне) -->
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_close"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="56dp"
         android:text="Закрыть"
+        android:textColor="#CBD5E1"
+        android:textStyle="bold"
         android:textSize="16sp"
-        android:background="@drawable/apply_settings_button"
-        android:textColor="@color/white"
-        android:fontFamily="@font/krabuler" />
+        android:fontFamily="@font/krabuler"
+        android:backgroundTint="#1E293B"
+        app:cornerRadius="28dp"
+        app:strokeColor="#475569"
+        app:strokeWidth="2dp"
+        android:paddingStart="32dp"
+        android:paddingEnd="32dp"
+        android:elevation="0dp"
+        android:stateListAnimator="@null"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:contentDescription="Закрыть детальный отчет" />
 
-</LinearLayout> 
+</LinearLayout>

@@ -1,5 +1,44 @@
-<vector xmlns:android="http://schemas.android.com/apk/res/android" android:height="24dp" android:tint="#000000" android:viewportHeight="960" android:viewportWidth="960" android:width="24dp">
-      
-    <path android:fillColor="@android:color/white" android:pathData="M360,560L440,560L440,240L360,240L360,560ZM520,560L600,560L600,240L520,240L520,560ZM80,880L80,160Q80,127 103.5,103.5Q127,80 160,80L800,80Q833,80 856.5,103.5Q880,127 880,160L880,640Q880,673 856.5,696.5Q833,720 800,720L240,720L80,880ZM206,640L800,640Q800,640 800,640Q800,640 800,640L800,160Q800,160 800,160Q800,160 800,160L160,160Q160,160 160,160Q160,160 160,160L160,685L206,640ZM160,640L160,640L160,160Q160,160 160,160Q160,160 160,160L160,160Q160,160 160,160Q160,160 160,160L160,640Q160,640 160,640Q160,640 160,640Z"/>
-    
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- Внешний круг (обводка камеры) -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M12,3 A9,9 0 1,1 12,21 A9,9 0 1,1 12,3"/>
+
+    <!-- Внутренняя рамка (видоискатель) -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M8,8 L16,8 L16,16 L8,16 Z"/>
+
+    <!-- Центральный квадрат стоп -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M10,10 L14,10 L14,14 L10,14 Z"/>
+
+    <!-- Угловые маркеры кадра -->
+    <g android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:fillColor="@android:color/transparent">
+        <!-- Левый верхний -->
+        <path android:pathData="M6,8.5 L6,6.5 L8.5,6.5"/>
+        <!-- Правый верхний -->
+        <path android:pathData="M15.5,6.5 L17.5,6.5 L17.5,8.5"/>
+        <!-- Правый нижний -->
+        <path android:pathData="M17.5,15.5 L17.5,17.5 L15.5,17.5"/>
+        <!-- Левый нижний -->
+        <path android:pathData="M8.5,17.5 L6.5,17.5 L6.5,15.5"/>
+    </g>
 </vector>
