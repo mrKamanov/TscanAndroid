@@ -305,6 +305,8 @@ class ImageProcessor {
             Log.d(TAG, "🔍 Начинаем ML обработку кадра: ${inputBitmap.width}x${inputBitmap.height}")
             Log.d(TAG, "🤖 ML модель готова: ${isMLModelReady()}")
             
+
+            
             val inputMat = Mat()
             Utils.bitmapToMat(inputBitmap, inputMat)
             

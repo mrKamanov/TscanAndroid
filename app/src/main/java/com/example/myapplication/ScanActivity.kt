@@ -738,13 +738,18 @@ class ScanActivity : AppCompatActivity(), FixedAnswerCallback {
     }
 
     /**
-     * Запускает ML обработку кадра (старый метод - для совместимости)
+     * Запускает ML обработку кадра (асинхронная) - приоритетная обработка эталонных ячеек
      */
     private fun processFrameWithML(bitmap: Bitmap) {
         if (isMLProcessing) return
         
         isMLProcessing = true
         Log.d("ScanActivity", "🚀 Начинаем ML обработку кадра...")
+        
+        // Проверяем активную модель
+        val activeModel = com.example.myapplication.utils.ModelSettingsHelper.getActiveModel(this)
+        val inputSize = com.example.myapplication.utils.ModelSettingsHelper.getActiveModelInputSize(this)
+        Log.i("ScanActivity", "📊 Активная модель: $activeModel, размер входа: ${inputSize}×${inputSize}")
         
         // Показываем прогресс-бар
         runOnUiThread {
@@ -1030,15 +1035,15 @@ class ScanActivity : AppCompatActivity(), FixedAnswerCallback {
         Log.d("ScanActivity", "🔧 Начинаем инициализацию ML модели")
         
         try {
-            Log.d("ScanActivity", "📦 Создаем OMRModelManager")
-            omrModelManager = OMRModelManager(this)
+                    Log.d("ScanActivity", "📦 Создаем OMRModelManager")
+        omrModelManager = OMRModelManager(this)
+        OMRModelManager.setGlobalInstance(omrModelManager)
             
             // Проверяем готовность модели
             Log.d("ScanActivity", "🔍 Проверяем готовность модели")
             if (omrModelManager.isModelReady()) {
                 isModelReady = true
                 Log.i("ScanActivity", "✅ ML модель инициализирована успешно")
-                Toast.makeText(this, "ML модель загружена", Toast.LENGTH_SHORT).show()
                 
                 // Передаем ML модель в ImageProcessor
                 Log.d("ScanActivity", "🔗 Передаем ML модель в ImageProcessor")
@@ -1049,12 +1054,10 @@ class ScanActivity : AppCompatActivity(), FixedAnswerCallback {
             } else {
                 isModelReady = false
                 Log.e("ScanActivity", "❌ ML модель не загружена")
-                Toast.makeText(this, "Ошибка загрузки ML модели", Toast.LENGTH_LONG).show()
             }
         } catch (e: Exception) {
             isModelReady = false
             Log.e("ScanActivity", "❌ Ошибка инициализации ML модели: ${e.message}")
-            Toast.makeText(this, "Ошибка инициализации ML модели", Toast.LENGTH_LONG).show()
         }
         
         Log.d("ScanActivity", "🏁 Инициализация ML модели завершена: isModelReady=$isModelReady")

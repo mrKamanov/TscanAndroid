@@ -5,45 +5,55 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.util.Log
 import org.json.JSONObject
-import org.pytorch.IValue
-import org.pytorch.Module
-import org.pytorch.Tensor
-import org.pytorch.torchvision.TensorImageUtils
 import java.io.File
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import com.example.myapplication.ml.OnnxModel
 
 /**
- * Менеджер для работы с OMR моделями в различных форматах
- * Поддерживает PyTorch, ONNX и TensorFlow Lite
+ * Менеджер для работы с OMR моделями
+ * Поддерживает ONNX формат
  */
 class OMRModelManager(private val context: Context) {
     
     companion object {
         private const val TAG = "OMRModelManager"
         
-        // Пути к моделям
-        private const val PYTORCH_MODEL = "omr_model.pt"
-        private const val ONNX_MODEL = "models/omr_model_best.onnx"
-        private const val TFLITE_MODEL = "models/omr_model.tflite"
+        // Статический экземпляр для глобального доступа
+        @Volatile
+        private var globalInstance: OMRModelManager? = null
         
-        // Конфигурационные файлы
-        private const val OLD_CONFIG_FILE = "model_config.json"
-        private const val NEW_CONFIG_FILE = "models/model_metadata.json"
+        /**
+         * Устанавливает глобальный экземпляр
+         */
+        fun setGlobalInstance(instance: OMRModelManager) {
+            globalInstance = instance
+        }
         
-        private const val INPUT_SIZE = 128
-        private const val CONFIDENCE_THRESHOLD = 0.7f
+        /**
+         * Получает глобальный экземпляр
+         */
+        fun getGlobalInstance(): OMRModelManager? {
+            return globalInstance
+        }
+        
+        /**
+         * Перезагружает глобальную модель
+         */
+        fun reloadGlobalModel() {
+            globalInstance?.reloadModel()
+        }
     }
     
-    // Поддерживаемые форматы моделей
+    private val CONFIDENCE_THRESHOLD = 0.7f
+    
+    // Поддерживаемый формат модели
     enum class ModelFormat {
-        PYTORCH,
-        ONNX,
-        TFLITE
+        ONNX
     }
     
-    private var currentFormat: ModelFormat = ModelFormat.ONNX // По умолчанию используем ONNX (оптимизированную модель)
+    private var currentFormat: ModelFormat = ModelFormat.ONNX // Используем ONNX модель
     private var modelInterface: ModelInterface? = null
     private var modelConfig: ModelConfig? = null
     
@@ -56,61 +66,37 @@ class OMRModelManager(private val context: Context) {
      * Устанавливает формат модели для использования
      */
     fun setModelFormat(format: ModelFormat) {
-        currentFormat = format
-        loadModel()
-        Log.i(TAG, "🔄 Переключение на формат: $format")
+        // У нас только ONNX формат, поэтому просто логируем
+        Log.i(TAG, "ℹ️ Используется формат: $format")
     }
     
     /**
-     * Загружает модель в выбранном формате
+     * Перезагружает модель (например, при изменении настроек)
+     */
+    fun reloadModel() {
+        Log.i(TAG, "🔄 Перезагрузка модели...")
+        val activeModel = com.example.myapplication.utils.ModelSettingsHelper.getActiveModel(context)
+        val inputSize = com.example.myapplication.utils.ModelSettingsHelper.getActiveModelInputSize(context)
+        Log.i(TAG, "📊 Активная модель: $activeModel, размер входа: ${inputSize}×${inputSize}")
+        
+        // Перезагружаем конфигурацию для новой модели
+        loadConfig()
+        
+        // Загружаем модель заново
+        loadModel()
+    }
+    
+    /**
+     * Загружает ONNX модель
      */
     private fun loadModel() {
         try {
             // Освобождаем предыдущую модель
             modelInterface?.release()
             
-            when (currentFormat) {
-                ModelFormat.PYTORCH -> loadPyTorchModel()
-                ModelFormat.ONNX -> loadOnnxModel()
-                ModelFormat.TFLITE -> loadTfLiteModel()
-            }
+            loadOnnxModel()
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Ошибка загрузки модели формата $currentFormat: ${e.message}")
-            // Fallback на PyTorch если доступен
-            if (currentFormat != ModelFormat.PYTORCH) {
-                Log.i(TAG, "🔄 Попытка fallback на PyTorch модель")
-                currentFormat = ModelFormat.PYTORCH
-                loadPyTorchModel()
-            }
-        }
-    }
-    
-    /**
-     * Загружает PyTorch модель
-     */
-    private fun loadPyTorchModel() {
-        try {
-            Log.i(TAG, "🔄 Начинаем загрузку PyTorch модели...")
-            
-            if (modelConfig == null) {
-                Log.e(TAG, "❌ Конфигурация модели не загружена")
-                return
-            }
-            
-            Log.i(TAG, "📁 Путь к модели: $PYTORCH_MODEL")
-            Log.i(TAG, "⚙️ Конфигурация: ${modelConfig!!.modelName} v${modelConfig!!.version}")
-            
-            modelInterface = PyTorchModel(context, PYTORCH_MODEL, modelConfig!!)
-            val success = modelInterface?.initialize() ?: false
-            
-            if (success) {
-                Log.i(TAG, "✅ PyTorch модель загружена успешно")
-            } else {
-                Log.e(TAG, "❌ Не удалось инициализировать PyTorch модель")
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "❌ Ошибка загрузки PyTorch модели: ${e.message}")
-            e.printStackTrace()
+            Log.e(TAG, "❌ Ошибка загрузки ONNX модели: ${e.message}")
         }
     }
     
@@ -124,11 +110,18 @@ class OMRModelManager(private val context: Context) {
                 return
             }
             
-            modelInterface = OnnxModel(context, ONNX_MODEL, modelConfig!!)
+            // Получаем активную модель из настроек
+            val activeModelPath = com.example.myapplication.utils.ModelSettingsHelper.getActiveModelPath(context)
+            val activeModel = com.example.myapplication.utils.ModelSettingsHelper.getActiveModel(context)
+            val inputSize = com.example.myapplication.utils.ModelSettingsHelper.getActiveModelInputSize(context)
+            Log.i(TAG, "🔄 Загружаем модель: $activeModelPath (${activeModel}×${activeModel})")
+            Log.i(TAG, "📊 Размер входа: ${inputSize}×${inputSize}")
+            
+            modelInterface = OnnxModel(context, activeModelPath, modelConfig!!)
             val success = modelInterface?.initialize() ?: false
             
             if (success) {
-                Log.i(TAG, "✅ ONNX модель загружена успешно")
+                Log.i(TAG, "✅ ONNX модель загружена успешно: ${activeModel}×${activeModel}")
             } else {
                 Log.e(TAG, "❌ Не удалось инициализировать ONNX модель")
             }
@@ -137,28 +130,7 @@ class OMRModelManager(private val context: Context) {
         }
     }
     
-    /**
-     * Загружает TensorFlow Lite модель
-     */
-    private fun loadTfLiteModel() {
-        try {
-            if (modelConfig == null) {
-                Log.e(TAG, "❌ Конфигурация модели не загружена")
-                return
-            }
-            
-            modelInterface = TfLiteModel(context, TFLITE_MODEL, modelConfig!!)
-            val success = modelInterface?.initialize() ?: false
-            
-            if (success) {
-                Log.i(TAG, "✅ TensorFlow Lite модель загружена успешно")
-            } else {
-                Log.e(TAG, "❌ Не удалось инициализировать TFLite модель")
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "❌ Ошибка загрузки TFLite модели: ${e.message}")
-        }
-    }
+
     
     /**
      * Загружает конфигурацию модели
@@ -167,42 +139,17 @@ class OMRModelManager(private val context: Context) {
         try {
             Log.i(TAG, "🔄 Загружаем конфигурацию модели...")
             
-            // Сначала пробуем новый конфигурационный файл
-            val configString = try {
-                Log.i(TAG, "📁 Пробуем новый конфиг: $NEW_CONFIG_FILE")
-                context.assets.open(NEW_CONFIG_FILE).bufferedReader().use { it.readText() }
-            } catch (e: Exception) {
-                // Fallback на старый файл
-                Log.i(TAG, "📁 Fallback на старый конфиг: $OLD_CONFIG_FILE")
-                context.assets.open(OLD_CONFIG_FILE).bufferedReader().use { it.readText() }
-            }
+            // Получаем активную модель для динамической конфигурации
+            val activeModel = com.example.myapplication.utils.ModelSettingsHelper.getActiveModel(context)
+            val inputSize = com.example.myapplication.utils.ModelSettingsHelper.getActiveModelInputSize(context)
             
-            Log.i(TAG, "📄 Конфигурация прочитана, парсим JSON...")
-            val json = JSONObject(configString)
+            Log.i(TAG, "📊 Создаем конфигурацию для модели: ${activeModel}×${activeModel}")
             
-            // Парсим новый формат конфигурации
-            val modelInfo = json.optJSONObject("model_info")
-            val input = json.optJSONObject("input")
-            val output = json.optJSONObject("output")
-            val preprocessing = json.optJSONObject("preprocessing")
-            val modelConfig = json.optJSONObject("model_config")
-            
-            // Используем новый формат если доступен, иначе старый
-            val config = try {
-                if (modelConfig != null) {
-                    Log.i(TAG, "🆕 Используем новый формат конфигурации")
-                    parseNewConfig(json)
-                } else {
-                    Log.i(TAG, "📋 Используем старый формат конфигурации")
-                    parseOldConfig(json)
-                }
-            } catch (e: Exception) {
-                Log.w(TAG, "⚠️ Ошибка парсинга нового конфига, fallback на старый: ${e.message}")
-                parseOldConfig(json)
-            }
+            // Создаем динамическую конфигурацию на основе выбранной модели
+            val config = createDynamicConfig(activeModel, inputSize)
             
             this.modelConfig = config
-            Log.i(TAG, "✅ Конфигурация загружена: ${config.modelName} (версия ${config.version})")
+            Log.i(TAG, "✅ Динамическая конфигурация создана: ${config.modelName} (размер ${config.inputSize[0]}×${config.inputSize[1]})")
             
         } catch (e: Exception) {
             Log.e(TAG, "❌ Ошибка загрузки конфигурации: ${e.message}")
@@ -303,6 +250,7 @@ class OMRModelManager(private val context: Context) {
      */
     fun getModelInfo(): String {
         return modelConfig?.let { config ->
+            val activeModel = com.example.myapplication.utils.ModelSettingsHelper.getActiveModelDisplayName(context)
             """
             Модель: ${config.modelName}
             Версия: ${config.version}
@@ -310,6 +258,7 @@ class OMRModelManager(private val context: Context) {
             Размер входа: ${config.inputSize[0]}x${config.inputSize[1]}
             Классы: ${config.classNames.joinToString(", ")}
             Порог уверенности: ${config.confidenceThreshold * 100}%
+            Активная модель: $activeModel
             Статус: ${if (isModelReady()) "Готова" else "Не готова"}
             """.trimIndent()
         } ?: "Модель не загружена"
@@ -326,7 +275,7 @@ class OMRModelManager(private val context: Context) {
      * Получает список доступных форматов
      */
     fun getAvailableFormats(): List<ModelFormat> {
-        return ModelFormat.values().toList()
+        return listOf(ModelFormat.ONNX)
     }
     
     /**
@@ -337,6 +286,36 @@ class OMRModelManager(private val context: Context) {
         modelInterface = null
         modelConfig = null
         Log.i(TAG, "🔧 Ресурсы модели освобождены")
+    }
+    
+    /**
+     * Создает динамическую конфигурацию для выбранной модели
+     */
+    private fun createDynamicConfig(activeModel: String, inputSize: Int): ModelConfig {
+        val modelName = when (activeModel) {
+            "64" -> "OMR_64x64_Model"
+            "128" -> "OMR_128x128_Model"
+            "256" -> "OMR_256x256_Model"
+            else -> "OMR_128x128_Model"
+        }
+        
+        val version = when (activeModel) {
+            "64" -> "1.0"
+            "128" -> "2.0"
+            "256" -> "3.0"
+            else -> "2.0"
+        }
+        
+        return ModelConfig(
+            modelName = modelName,
+            version = version,
+            inputSize = intArrayOf(inputSize, inputSize),
+            numClasses = 3,
+            classNames = arrayOf("no", "yes", "fixed"),
+            mean = floatArrayOf(0.485f, 0.456f, 0.406f),
+            std = floatArrayOf(0.229f, 0.224f, 0.225f),
+            confidenceThreshold = CONFIDENCE_THRESHOLD
+        )
     }
 }
 

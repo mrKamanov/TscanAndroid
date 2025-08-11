@@ -33,6 +33,7 @@
         <activity android:name=".InstructionsActivity" />
         <activity android:name=".ConstructorActivity" />
         <activity android:name=".MultipleActivity" />
+        <activity android:name=".SettingsActivity" />
 
         <!-- FileProvider для экспорта Excel файлов -->
         <provider

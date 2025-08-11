@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/background">
+
+
+
+    <!-- Основной контент -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Заголовок раздела -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Выбор активной модели"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="@color/text"
+                android:fontFamily="@font/krabuler"
+                android:layout_marginBottom="16dp" />
+
+            <!-- Описание -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Выберите модель, которая будет использоваться для сканирования тестов по умолчанию"
+                android:textSize="14sp"
+                android:textColor="@color/text"
+                android:fontFamily="@font/krabuler"
+                android:layout_marginBottom="24dp" />
+
+                         <!-- Модель 64x64 -->
+             <LinearLayout
+                 android:layout_width="match_parent"
+                 android:layout_height="wrap_content"
+                 android:orientation="vertical"
+                 android:background="@drawable/menu_card_bg"
+                 android:padding="16dp"
+                 android:layout_marginBottom="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                                                                                                   <TextView
+                              android:layout_width="wrap_content"
+                              android:layout_height="wrap_content"
+                              android:text="Модель 64×64"
+                              android:textSize="18sp"
+                              android:textStyle="bold"
+                              android:textColor="@color/text"
+                              android:fontFamily="@font/krabuler" />
+
+                                                                                                   <TextView
+                              android:layout_width="wrap_content"
+                              android:layout_height="wrap_content"
+                              android:text="Быстрая модель для слабых устройств"
+                              android:textSize="14sp"
+                              android:textColor="@color/text"
+                              android:fontFamily="@font/krabuler"
+                              android:layout_marginTop="4dp" />
+
+                    </LinearLayout>
+
+                                         <com.google.android.material.button.MaterialButton
+                         android:id="@+id/btnModel64"
+                         android:layout_width="80dp"
+                         android:layout_height="40dp"
+                         android:text="64"
+                         android:textSize="12sp"
+                         android:textStyle="bold"
+                         android:fontFamily="@font/krabuler"
+                         android:backgroundTint="#16A34A"
+                         app:cornerRadius="20dp"
+                         app:strokeColor="@color/secondary"
+                         app:strokeWidth="2dp"
+                         style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+                         <!-- Модель 128x128 -->
+             <LinearLayout
+                 android:layout_width="match_parent"
+                 android:layout_height="wrap_content"
+                 android:orientation="vertical"
+                 android:background="@drawable/menu_card_bg"
+                 android:padding="16dp"
+                 android:layout_marginBottom="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                                                                                                   <TextView
+                              android:layout_width="wrap_content"
+                              android:layout_height="wrap_content"
+                              android:text="Модель 128×128"
+                              android:textSize="18sp"
+                              android:textStyle="bold"
+                              android:textColor="@color/text"
+                              android:fontFamily="@font/krabuler" />
+
+                                                                                                   <TextView
+                              android:layout_width="wrap_content"
+                              android:layout_height="wrap_content"
+                              android:text="Сбалансированная модель (рекомендуется)"
+                              android:textSize="14sp"
+                              android:textColor="@color/text"
+                              android:fontFamily="@font/krabuler"
+                              android:layout_marginTop="4dp" />
+
+                    </LinearLayout>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnModel128"
+                        style="@style/Widget.MaterialComponents.Button"
+                        android:layout_width="80dp"
+                        android:layout_height="40dp"
+                        android:backgroundTint="#16A34A"
+                        android:fontFamily="@font/krabuler"
+                        android:text="128"
+                        android:textColor="@color/white"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        app:cornerRadius="20dp"
+                        app:strokeColor="#88C0D0"
+                        app:strokeWidth="2dp" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+                         <!-- Модель 256x256 -->
+             <LinearLayout
+                 android:layout_width="match_parent"
+                 android:layout_height="wrap_content"
+                 android:orientation="vertical"
+                 android:background="@drawable/menu_card_bg"
+                 android:padding="16dp"
+                 android:layout_marginBottom="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                                                                                                   <TextView
+                              android:layout_width="wrap_content"
+                              android:layout_height="wrap_content"
+                              android:text="Модель 256×256"
+                              android:textSize="18sp"
+                              android:textStyle="bold"
+                              android:textColor="@color/text"
+                              android:fontFamily="@font/krabuler" />
+
+                                                                                                   <TextView
+                              android:layout_width="wrap_content"
+                              android:layout_height="wrap_content"
+                              android:text="Высокоточная модель для мощных устройств"
+                              android:textSize="14sp"
+                              android:textColor="@color/text"
+                              android:fontFamily="@font/krabuler"
+                              android:layout_marginTop="4dp" />
+
+                    </LinearLayout>
+
+                                         <com.google.android.material.button.MaterialButton
+                         android:id="@+id/btnModel256"
+                         android:layout_width="80dp"
+                         android:layout_height="40dp"
+                         android:text="256"
+                         android:textSize="12sp"
+                         android:textStyle="bold"
+                         android:fontFamily="@font/krabuler"
+                         android:backgroundTint="#16A34A"
+                         app:cornerRadius="20dp"
+                         app:strokeColor="@color/secondary"
+                         app:strokeWidth="2dp"
+                         style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+                                                  <!-- Информация о выборе -->
+             <TextView
+                 android:id="@+id/tvSelectionInfo"
+                 android:layout_width="match_parent"
+                 android:layout_height="wrap_content"
+                 android:text="Активна модель: 128×128"
+                 android:textSize="16sp"
+                 android:textStyle="bold"
+                 android:textColor="#16A34A"
+                 android:fontFamily="@font/krabuler"
+                 android:gravity="center"
+                 android:padding="16dp"
+                 android:background="@drawable/menu_card_bg"
+                 android:layout_marginTop="16dp" />
+
+             <!-- Кнопка назад внизу -->
+             <com.google.android.material.button.MaterialButton
+                 android:id="@+id/btnBack"
+                 android:layout_width="match_parent"
+                 android:layout_height="56dp"
+                 android:text="НАЗАД"
+                 android:textColor="@color/text"
+                 android:textStyle="bold"
+                 android:textSize="16sp"
+                 android:fontFamily="@font/krabuler"
+                 android:backgroundTint="#1E293B"
+                 app:cornerRadius="28dp"
+                 app:strokeColor="#88C0D0"
+                 app:strokeWidth="2dp"
+                 android:paddingStart="24dp"
+                 android:paddingEnd="24dp"
+                 android:elevation="0dp"
+                 android:stateListAnimator="@null"
+                 android:layout_marginTop="24dp"
+                 style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+
+         </LinearLayout>
+
+     </ScrollView>
+
+</LinearLayout>

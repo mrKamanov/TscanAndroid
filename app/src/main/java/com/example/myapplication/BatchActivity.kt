@@ -147,6 +147,7 @@ class BatchActivity : AppCompatActivity() {
         criteriaManager = BatchCriteriaManager(this)
         reportsManager = ReportsManager(this)
         omrModelManager = OMRModelManager(this)
+        OMRModelManager.setGlobalInstance(omrModelManager)
         
         // Проверка готовности ML модели
         Thread {

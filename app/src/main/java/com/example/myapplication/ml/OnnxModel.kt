@@ -22,7 +22,6 @@ class OnnxModel(
     
     companion object {
         private const val TAG = "OnnxModel"
-        private const val INPUT_SIZE = 128
     }
     
     private var session: OrtSession? = null
@@ -33,18 +32,24 @@ class OnnxModel(
     // Кэш для ускорения
     private val preprocessedCache = mutableMapOf<String, FloatArray>()
     
+    /**
+     * Получает размер входа для текущей модели
+     */
+    private fun getInputSize(): Int {
+        return com.example.myapplication.utils.ModelSettingsHelper.getActiveModelInputSize(context)
+    }
+    
     override fun initialize(): Boolean {
         try {
             Log.i(TAG, "🔄 Инициализация ONNX модели...")
+            Log.i(TAG, "📁 Путь к модели: $modelPath")
             
-            // Проверяем наличие файла модели
-            val tempFile = File(context.cacheDir, "omr_model_best.onnx")
-            if (!tempFile.exists()) {
-                Log.i(TAG, "📁 Копируем ONNX модель во временную директорию...")
-                context.assets.open(modelPath).use { input ->
-                    tempFile.outputStream().use { output ->
-                        input.copyTo(output)
-                    }
+            // Всегда копируем модель заново (для обновления при смене модели)
+            val tempFile = File(context.cacheDir, "omr_model_current.onnx")
+            Log.i(TAG, "📁 Копируем ONNX модель во временную директорию...")
+            context.assets.open(modelPath).use { input ->
+                tempFile.outputStream().use { output ->
+                    input.copyTo(output)
                 }
             }
             
@@ -112,15 +117,18 @@ class OnnxModel(
         }
         
         try {
+            val inputSize = getInputSize()
+            Log.d(TAG, "🔍 Предсказание для изображения ${bitmap.width}×${bitmap.height} с размером входа ${inputSize}×${inputSize}")
+            
             // Предобрабатываем изображение
             val inputData = preprocessImage(bitmap)
 
             // Преобразуем в NCHW Array для ONNX
             val inputArray = Array(1) { // batch
                 Array(3) { ch ->
-                    Array(INPUT_SIZE) { y ->
-                        FloatArray(INPUT_SIZE) { x ->
-                            inputData[ch * INPUT_SIZE * INPUT_SIZE + y * INPUT_SIZE + x]
+                    Array(inputSize) { y ->
+                        FloatArray(inputSize) { x ->
+                            inputData[ch * inputSize * inputSize + y * inputSize + x]
                         }
                     }
                 }
@@ -128,6 +136,7 @@ class OnnxModel(
 
             // Создаем тензор
             val inputTensor = OnnxTensor.createTensor(environment!!, inputArray)
+            Log.d(TAG, "📊 Создан входной тензор: ${inputTensor.info.shape.contentToString()}")
 
             // Выполняем предсказание
             val inputs = mapOf(inputName!! to inputTensor)
@@ -194,6 +203,29 @@ class OnnxModel(
     }
     
     /**
+     * Перезагружает ONNX сессию (при изменении модели)
+     */
+    fun reloadSession() {
+        Log.i(TAG, "🔄 Перезагрузка ONNX сессии...")
+        try {
+            // Освобождаем старую сессию
+            session?.close()
+            session = null
+            inputName = null
+            outputName = null
+            
+            // Очищаем кэш
+            preprocessedCache.clear()
+            
+            // Пересоздаем сессию
+            initialize()
+            Log.i(TAG, "✅ ONNX сессия перезагружена")
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Ошибка перезагрузки ONNX сессии: ${e.message}")
+        }
+    }
+    
+    /**
      * Предобрабатывает изображение для ONNX модели с кэшированием
      */
     private fun preprocessImage(bitmap: Bitmap): FloatArray {
@@ -205,11 +237,14 @@ class OnnxModel(
             return cached
         }
         
-        val resizedBitmap = Bitmap.createScaledBitmap(bitmap, INPUT_SIZE, INPUT_SIZE, true)
-        val inputData = FloatArray(INPUT_SIZE * INPUT_SIZE * 3)
+        val inputSize = getInputSize()
+        Log.d(TAG, "🖼️ Предобработка изображения: ${bitmap.width}×${bitmap.height} → ${inputSize}×${inputSize}")
         
-        for (y in 0 until INPUT_SIZE) {
-            for (x in 0 until INPUT_SIZE) {
+        val resizedBitmap = Bitmap.createScaledBitmap(bitmap, inputSize, inputSize, true)
+        val inputData = FloatArray(inputSize * inputSize * 3)
+        
+        for (y in 0 until inputSize) {
+            for (x in 0 until inputSize) {
                 val pixel = resizedBitmap.getPixel(x, y)
                 
                 // Нормализуем RGB значения
@@ -218,10 +253,10 @@ class OnnxModel(
                 val b = (Color.blue(pixel) / 255f - config.mean[2]) / config.std[2]
                 
                 // ONNX ожидает формат NCHW (batch, channels, height, width)
-                val index = y * INPUT_SIZE + x
+                val index = y * inputSize + x
                 inputData[index] = r
-                inputData[index + INPUT_SIZE * INPUT_SIZE] = g
-                inputData[index + 2 * INPUT_SIZE * INPUT_SIZE] = b
+                inputData[index + inputSize * inputSize] = g
+                inputData[index + 2 * inputSize * inputSize] = b
             }
         }
         
