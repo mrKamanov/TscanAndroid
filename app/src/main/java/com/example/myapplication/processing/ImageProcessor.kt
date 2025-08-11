@@ -17,8 +17,10 @@ import org.opencv.core.MatOfPoint
 import org.opencv.core.MatOfPoint2f
 import java.io.ByteArrayOutputStream
 import com.example.myapplication.models.OMRResult
+import com.example.myapplication.models.FixedAnswer
 import com.example.myapplication.ml.OMRModelManager
 import com.example.myapplication.ml.PredictionResult
+import com.example.myapplication.ml.FixedAnswerCallback
 
 /**
  * Класс для обработки изображений с использованием OpenCV
@@ -256,6 +258,38 @@ class ImageProcessor {
             return null
         }
     }
+    
+    /**
+     * Обработка warp-бланка с поддержкой исправлений
+     */
+    fun processWarpedFrameWithMLAndFixed(
+        warpedBitmap: Bitmap,
+        questionsCount: Int,
+        choicesCount: Int,
+        correctAnswers: List<Int>,
+        fixedAnswerCallback: FixedAnswerCallback? = null,
+        onProgressUpdate: ((Int, Int, Boolean) -> Unit)? = null
+    ): OMRResult? {
+        try {
+            Log.d(TAG, "🔍 Начинаем ML обработку warp-бланка с поддержкой исправлений")
+            
+            // Конвертируем Bitmap в Mat
+            val warpMat = Mat()
+            Utils.bitmapToMat(warpedBitmap, warpMat)
+            
+            // Обрабатываем с поддержкой исправлений
+            val result = processTestSheetWithPriority(warpMat, questionsCount, choicesCount, correctAnswers, onProgressUpdate, fixedAnswerCallback)
+            
+            // Освобождаем ресурсы
+            warpMat.release()
+            
+            return result
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Ошибка ML обработки warp-бланка с исправлениями: ${e.message}", e)
+            return null
+        }
+    }
 
     /**
      * Обработка кадра с ML (асинхронная) - приоритетная обработка эталонных ячеек
@@ -361,7 +395,7 @@ class ImageProcessor {
                 drawGridOnMat(gridMat, questionsCount, choicesCount)
                 
                 // Обрабатываем бланк с ML с приоритетной обработкой
-                val result = processTestSheetWithPriority(warp, questionsCount, choicesCount, correctAnswers, onProgressUpdate)
+                val result = processTestSheetWithPriority(warp, questionsCount, choicesCount, correctAnswers, onProgressUpdate, null)
                 
                 // Добавляем визуализацию к результату
                 if (result != null) {
@@ -602,7 +636,8 @@ class ImageProcessor {
         questionsCount: Int, 
         choicesCount: Int, 
         correctAnswers: List<Int>,
-        onProgressUpdate: ((Int, Int, Boolean) -> Unit)?
+        onProgressUpdate: ((Int, Int, Boolean) -> Unit)?,
+        fixedAnswerCallback: FixedAnswerCallback? = null
     ): OMRResult {
         try {
             Log.d(TAG, "📋 Приоритетная обработка тестового бланка: ${warpMat.cols()}x${warpMat.rows()}")
@@ -622,6 +657,7 @@ class ImageProcessor {
             Log.d(TAG, "🚀 ЭТАП 1: Обрабатываем только эталонные ячейки...")
             
             val referenceCells = mutableListOf<Triple<Int, Int, Bitmap>>()
+            var referencePredictions = listOf<PredictionResult>() // Объявляем здесь
             
             // Собираем только эталонные ячейки (правильные ответы)
             for (question in 0 until questionsCount) {
@@ -647,7 +683,7 @@ class ImageProcessor {
                     val referenceBitmaps = referenceCells.map { it.third }
                     
                     // Обрабатываем эталонные ячейки одним батчем
-                    val referencePredictions = omrModelManager!!.predictCellsBatch(referenceBitmaps)
+                    referencePredictions = omrModelManager!!.predictCellsBatch(referenceBitmaps)
                     
                     val referenceTime = System.currentTimeMillis() - startTime
                     Log.d(TAG, "⚡ Эталонные ячейки обработаны за ${referenceTime}мс")
@@ -677,18 +713,53 @@ class ImageProcessor {
             val grading = IntArray(questionsCount) { -1 } // -1 = не обработано
             val incorrectQuestions = mutableListOf<Int>() // Номера вопросов с ошибками
             
+            // Список обнаруженных исправлений для обработки
+            val detectedFixedAnswers = mutableListOf<FixedAnswer>()
+            val pendingFixedDecisions = mutableMapOf<Int, Boolean>() // question -> считать ошибкой
+            val fixedErrorQuestions = mutableListOf<Int>() // Вопросы с исправлениями, помеченные как ошибки
+            
             // Заполняем результаты только для эталонных ячеек
             for (question in 0 until questionsCount) {
                 if (question < correctAnswers.size) {
                     val correctChoice = correctAnswers[question]
-                    selectedAnswers[question] = correctChoice // Предполагаем правильный ответ
-                    grading[question] = if (mlResults[question][correctChoice]) 1 else 0
                     
-                    if (grading[question] == 0) {
-                        incorrectQuestions.add(question)
-                        Log.d(TAG, "❌ Вопрос $question неправильный - нужна фоновая проверка")
-                    } else {
-                        Log.d(TAG, "✅ Вопрос $question правильный")
+                    // Проверяем результат ML для эталонной ячейки
+                    val referenceCellIndex = referenceCells.indexOfFirst { it.first == question && it.second == correctChoice }
+                    if (referenceCellIndex >= 0) {
+                        val prediction = referencePredictions[referenceCellIndex]
+                        
+                        when {
+                            prediction.predictedClass == "yes" -> {
+                                // Чисто заполненная ячейка - правильный ответ
+                                selectedAnswers[question] = correctChoice
+                                grading[question] = 1
+                                Log.d(TAG, "✅ Вопрос ${question + 1} правильный (yes)")
+                            }
+                            prediction.predictedClass == "no" -> {
+                                // Пустая ячейка - ошибка
+                                selectedAnswers[question] = correctChoice 
+                                grading[question] = 0
+                                incorrectQuestions.add(question)
+                                Log.d(TAG, "❌ Вопрос ${question + 1} неправильный (no) - нужна фоновая проверка")
+                            }
+                            prediction.predictedClass == "fixed" -> {
+                                // Исправление обнаружено - нужно спросить пользователя
+                                val cellBitmap = referenceCells[referenceCellIndex].third.copy(Bitmap.Config.ARGB_8888, false)
+                                val fixedAnswer = FixedAnswer(
+                                    questionNumber = question + 1,
+                                    choiceNumber = correctChoice + 1,
+                                    isCorrectChoice = true,
+                                    cellBitmap = cellBitmap
+                                )
+                                detectedFixedAnswers.add(fixedAnswer)
+                                
+                                // Пока считаем как правильный (будет изменено после решения пользователя)
+                                selectedAnswers[question] = correctChoice
+                                grading[question] = 1
+                                
+                                Log.d(TAG, "⚠️ Вопрос ${question + 1} - обнаружено исправление в правильном ответе")
+                            }
+                        }
                     }
                 }
             }
@@ -786,11 +857,148 @@ class ImageProcessor {
                 }
             }
             
+            // ===== ЭТАП 4: ОБРАБОТКА ИСПРАВЛЕНИЙ =====
+            if (detectedFixedAnswers.isNotEmpty() && fixedAnswerCallback != null) {
+                Log.d(TAG, "⚠️ ЭТАП 4: Обработка ${detectedFixedAnswers.size} исправлений...")
+                
+                // Создаем временный результат для показа пользователю
+                val tempResult = OMRResult(
+                    selectedAnswers = selectedAnswers,
+                    grading = grading,
+                    incorrectQuestions = finalIncorrectQuestions,
+                    correctAnswers = correctAnswers,
+                    fixedAnswers = detectedFixedAnswers
+                )
+                
+                // Отправляем каждое исправление на рассмотрение пользователя
+                for (fixedAnswer in detectedFixedAnswers) {
+                    fixedAnswerCallback.onFixedAnswerDetected(fixedAnswer) { countAsError ->
+                        val questionIndex = fixedAnswer.questionNumber - 1
+                        pendingFixedDecisions[questionIndex] = countAsError
+                        
+                        if (countAsError) {
+                            // Пользователь решил считать ошибкой - нужна фоновая проверка
+                            grading[questionIndex] = 0
+                            fixedErrorQuestions.add(questionIndex)
+                            Log.d(TAG, "❌ Вопрос ${fixedAnswer.questionNumber} помечен как ошибка - будет фоновая проверка")
+                        } else {
+                            // Пользователь решил оставить правильным
+                            grading[questionIndex] = 1
+                            Log.d(TAG, "✅ Вопрос ${fixedAnswer.questionNumber} остается правильным по решению пользователя")
+                        }
+                        
+                        // Проверяем, все ли исправления обработаны
+                        if (pendingFixedDecisions.size == detectedFixedAnswers.size) {
+                            // ===== ДОПОЛНИТЕЛЬНАЯ ФОНОВАЯ ПРОВЕРКА FIXED ОШИБОК =====
+                            if (fixedErrorQuestions.isNotEmpty()) {
+                                Log.d(TAG, "🔄 Фоновая проверка fixed ошибок для ${fixedErrorQuestions.size} вопросов...")
+                                
+                                // Собираем все ячейки для вопросов с fixed ошибками
+                                val fixedErrorCells = mutableListOf<Triple<Int, Int, Bitmap>>()
+                                
+                                for (question in fixedErrorQuestions) {
+                                    for (choice in 0 until choicesCount) {
+                                        val x = choice * cellWidth
+                                        val y = question * cellHeight
+                                        
+                                        // Извлекаем ячейку как Bitmap
+                                        val cellBitmap = Bitmap.createBitmap(warpBitmap, x, y, cellWidth, cellHeight)
+                                        fixedErrorCells.add(Triple(question, choice, cellBitmap))
+                                    }
+                                }
+                                
+                                // Обрабатываем ячейки с fixed ошибками
+                                if (isMLModelReady() && fixedErrorCells.isNotEmpty()) {
+                                    try {
+                                        val fixedErrorStartTime = System.currentTimeMillis()
+                                        
+                                        // Подготавливаем батч ячеек с fixed ошибками
+                                        val fixedErrorBitmaps = fixedErrorCells.map { it.third }
+                                        
+                                        // Обрабатываем ячейки с fixed ошибками батчем
+                                        val fixedErrorPredictions = omrModelManager!!.predictCellsBatch(fixedErrorBitmaps)
+                                        
+                                        val fixedErrorTime = System.currentTimeMillis() - fixedErrorStartTime
+                                        Log.d(TAG, "⚡ Fixed ошибки обработаны за ${fixedErrorTime}мс")
+                                        
+                                        // Обновляем результаты для fixed ошибок
+                                        for (i in fixedErrorCells.indices) {
+                                            val (question, choice, _) = fixedErrorCells[i]
+                                            val prediction = fixedErrorPredictions[i]
+                                            
+                                            mlResults[question][choice] = prediction.isFilled
+                                            
+                                            // Отрисовываем результат
+                                            onProgressUpdate?.invoke(question, choice, prediction.isFilled)
+                                            
+                                            Log.d(TAG, "🔍 Fixed ошибка [$question][$choice] = ${prediction.getDescription()}")
+                                        }
+                                        
+                                        // Определяем выбранные ответы для fixed ошибок
+                                        for (question in fixedErrorQuestions) {
+                                            var selectedChoice = -1
+                                            for (choice in 0 until choicesCount) {
+                                                if (mlResults[question][choice]) {
+                                                    selectedChoice = choice
+                                                    break
+                                                }
+                                            }
+                                            
+                                            if (selectedChoice != -1) {
+                                                selectedAnswers[question] = selectedChoice
+                                                Log.d(TAG, "🔄 Fixed ошибка $question: выбран ответ $selectedChoice, правильный ${correctAnswers[question]}")
+                                            } else {
+                                                // Если ничего не найдено, оставляем эталонный ответ
+                                                selectedAnswers[question] = correctAnswers[question]
+                                                Log.d(TAG, "🔄 Fixed ошибка $question: не найден выбранный ответ, оставляем эталонный")
+                                            }
+                                        }
+                                        
+                                    } catch (e: Exception) {
+                                        Log.e(TAG, "❌ Ошибка фоновой проверки fixed ошибок: ${e.message}")
+                                    }
+                                }
+                                
+                                // Освобождаем ресурсы ячеек с fixed ошибками
+                                fixedErrorCells.forEach { it.third.recycle() }
+                            }
+                            
+                            // Пересчитываем финальный список неправильных вопросов
+                            val updatedIncorrectQuestions = mutableListOf<Map<String, Any>>()
+                            for (question in 0 until questionsCount) {
+                                if (question < correctAnswers.size && grading[question] == 0) {
+                                    updatedIncorrectQuestions.add(mapOf(
+                                        "question_number" to (question + 1),
+                                        "selected_answer" to (selectedAnswers[question] + 1),
+                                        "correct_answer" to (correctAnswers[question] + 1)
+                                    ))
+                                }
+                            }
+                            
+                            // Создаем финальный результат с обновленными данными
+                            val finalResult = OMRResult(
+                                selectedAnswers = selectedAnswers,
+                                grading = grading,
+                                incorrectQuestions = updatedIncorrectQuestions,
+                                correctAnswers = correctAnswers,
+                                fixedAnswers = detectedFixedAnswers
+                            )
+                            
+                            // Теперь можно освободить warpBitmap, так как все fixed ошибки обработаны
+                            warpBitmap.recycle()
+                            
+                            fixedAnswerCallback.onAllFixedAnswersProcessed(finalResult)
+                        }
+                    }
+                }
+            }
+
             val result = OMRResult(
                 selectedAnswers = selectedAnswers,
                 grading = grading,
                 incorrectQuestions = finalIncorrectQuestions,
-                correctAnswers = correctAnswers
+                correctAnswers = correctAnswers,
+                fixedAnswers = detectedFixedAnswers
             )
             
             val correctCount = grading.count { it == 1 }
@@ -800,9 +1008,14 @@ class ImageProcessor {
             Log.d(TAG, "📊 selectedAnswers: ${selectedAnswers.contentToString()}")
             Log.d(TAG, "📊 grading: ${grading.contentToString()}")
             
-            // Освобождаем ресурсы
+            // Освобождаем ресурсы reference cells
             referenceCells.forEach { it.third.recycle() }
-            warpBitmap.recycle()
+            
+            // Если нет fixed исправлений или колбэк не задан, освобождаем warpBitmap сейчас
+            if (detectedFixedAnswers.isEmpty() || fixedAnswerCallback == null) {
+                warpBitmap.recycle()
+            }
+            // Иначе warpBitmap будет освобожден после обработки всех fixed ошибок
             
             return result
             

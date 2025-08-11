@@ -25,15 +25,15 @@ class OMRModelManager(private val context: Context) {
         
         // Пути к моделям
         private const val PYTORCH_MODEL = "omr_model.pt"
-        private const val ONNX_MODEL = "models/omr_model_optimized.onnx"
+        private const val ONNX_MODEL = "models/omr_model_best.onnx"
         private const val TFLITE_MODEL = "models/omr_model.tflite"
         
         // Конфигурационные файлы
         private const val OLD_CONFIG_FILE = "model_config.json"
         private const val NEW_CONFIG_FILE = "models/model_metadata.json"
         
-        private const val INPUT_SIZE = 224
-        private const val CONFIDENCE_THRESHOLD = 0.8f
+        private const val INPUT_SIZE = 128
+        private const val CONFIDENCE_THRESHOLD = 0.7f
     }
     
     // Поддерживаемые форматы моделей
@@ -267,7 +267,7 @@ class OMRModelManager(private val context: Context) {
     fun predictCell(cellBitmap: Bitmap): PredictionResult {
         if (modelInterface == null || !modelInterface!!.isReady()) {
             Log.e(TAG, "❌ Модель не загружена или не готова")
-            return PredictionResult(isFilled = false, confidence = 0f, probabilities = floatArrayOf(0f, 0f))
+            return PredictionResult(isFilled = false, confidence = 0f, probabilities = floatArrayOf(0f, 0f, 0f), predictedClass = "no", isFixed = false)
         }
         
         return modelInterface!!.predict(cellBitmap)
@@ -282,7 +282,7 @@ class OMRModelManager(private val context: Context) {
         if (modelInterface == null || !modelInterface!!.isReady()) {
             Log.e(TAG, "❌ Модель не загружена или не готова")
             return List(cellBitmaps.size) { 
-                PredictionResult(isFilled = false, confidence = 0f, probabilities = floatArrayOf(0f, 0f)) 
+                PredictionResult(isFilled = false, confidence = 0f, probabilities = floatArrayOf(0f, 0f, 0f), predictedClass = "no", isFixed = false) 
             }
         }
         

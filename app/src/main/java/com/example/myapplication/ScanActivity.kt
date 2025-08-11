@@ -43,14 +43,17 @@ import android.util.Log
 // Импорты для работы с ML моделью
 import com.example.myapplication.ml.OMRModelManager
 import com.example.myapplication.ml.PredictionResult
+import com.example.myapplication.ml.FixedAnswerCallback
 import com.example.myapplication.models.OMRResult
+import com.example.myapplication.models.FixedAnswer
 import kotlinx.coroutines.*
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Color
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 
-class ScanActivity : AppCompatActivity() {
+class ScanActivity : AppCompatActivity(), FixedAnswerCallback {
     // ===== ПЕРЕМЕННЫЕ ДЛЯ РАБОТЫ С КАМЕРОЙ =====
     private var cameraProvider: ProcessCameraProvider? = null
     private var cameraBound = false
@@ -77,6 +80,11 @@ class ScanActivity : AppCompatActivity() {
     // ===== ПЕРЕМЕННЫЕ ДЛЯ РЕЗУЛЬТАТОВ ПРОВЕРКИ =====
     private var lastGrading = mutableListOf<Int>()
     private var lastIncorrectQuestions = mutableListOf<Map<String, Any>>()
+    
+    // ===== ПЕРЕМЕННЫЕ ДЛЯ ОБРАБОТКИ ИСПРАВЛЕНИЙ =====
+    private var pendingFixedAnswers = mutableListOf<FixedAnswer>()
+    private var currentFixedIndex = 0
+    private var fixedAnswerDecisions = mutableMapOf<Int, Boolean>() // question -> считать ошибкой
 
     
     // ===== ПЕРЕМЕННЫЕ ДЛЯ УПРАВЛЕНИЯ ПАУЗОЙ =====
@@ -620,11 +628,12 @@ class ScanActivity : AppCompatActivity() {
                     findViewById<TextView>(R.id.ml_progress_text).text = "ML анализ ячеек..."
                 }
                 
-                val omrResult = imageProcessor.processWarpedFrameWithML(
+                val omrResult = imageProcessor.processWarpedFrameWithMLAndFixed(
                     warpedBitmap,
                     gridManager.getQuestionsCount(),
                     gridManager.getChoicesCount(),
-                    gridManager.getCorrectAnswers()
+                    gridManager.getCorrectAnswers(),
+                    this@ScanActivity, // FixedAnswerCallback
                 ) { question, choice, isFilled ->
                     // Callback для обновления UI по мере обработки ячеек
                     runOnUiThread {
@@ -1060,6 +1069,68 @@ class ScanActivity : AppCompatActivity() {
         }
     }
     
+    // ===== РЕАЛИЗАЦИЯ FixedAnswerCallback =====
+    
+    override fun onFixedAnswerDetected(fixedAnswer: FixedAnswer, onUserDecision: (Boolean) -> Unit) {
+        Log.d("ScanActivity", "⚠️ Обнаружено исправление в вопросе ${fixedAnswer.questionNumber}")
+        
+        runOnUiThread {
+            showFixedAnswerDialog(fixedAnswer, onUserDecision)
+        }
+    }
+    
+    override fun onAllFixedAnswersProcessed(finalResult: OMRResult) {
+        Log.d("ScanActivity", "✅ Все исправления обработаны, обновляем UI")
+        
+        runOnUiThread {
+            // Обновляем UI с финальными результатами
+            updateUIWithResult(finalResult)
+            Toast.makeText(this, "Обработка исправлений завершена", Toast.LENGTH_SHORT).show()
+        }
+    }
+    
+    /**
+     * Показывает диалог для принятия решения об исправлении
+     */
+    private fun showFixedAnswerDialog(fixedAnswer: FixedAnswer, onUserDecision: (Boolean) -> Unit) {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_fixed_answer, null)
+        
+        // Заполняем данные
+        dialogView.findViewById<TextView>(R.id.tvQuestionNumber).text = fixedAnswer.questionNumber.toString()
+        
+        // Показываем номер ответа (1-based нумерация как в приложении)
+        dialogView.findViewById<TextView>(R.id.tvChoiceNumber).text = fixedAnswer.choiceNumber.toString()
+        
+        // Показываем превью ячейки
+        val imageView = dialogView.findViewById<ImageView>(R.id.ivCellPreview)
+        if (fixedAnswer.cellBitmap != null) {
+            imageView.setImageBitmap(fixedAnswer.cellBitmap)
+        }
+        
+        // Создаем диалог
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .setCancelable(false)
+            .create()
+        
+        // Обработчики кнопок
+        dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnNo).setOnClickListener {
+            // НЕТ - оставить правильным
+            onUserDecision(false)
+            dialog.dismiss()
+            Log.d("ScanActivity", "✅ Пользователь решил оставить вопрос ${fixedAnswer.questionNumber} правильным")
+        }
+        
+        dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnYes).setOnClickListener {
+            // ДА - считать ошибкой  
+            onUserDecision(true)
+            dialog.dismiss()
+            Log.d("ScanActivity", "❌ Пользователь решил считать вопрос ${fixedAnswer.questionNumber} ошибкой")
+        }
+        
+        dialog.show()
+    }
+
     /**
      * Освобождает ресурсы
      */

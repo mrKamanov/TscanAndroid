@@ -1,22 +1,29 @@
-OMR Classification Model
-=======================
+OMR ЛУЧШАЯ Модель 🏆
+==================
 
 Model Information:
-- Architecture: ResNet18 with custom head
-- Input Size: 224x224 RGB
-- Output: 2 classes (empty/filled)
-- Training Data: 5000 images
-- Test Accuracy: 99.80%
-- Model Size: 43.8 MB
+- Architecture: MobileNetV2 + Custom Classifier  
+- Input Size: 64x64 RGB
+- Output: 3 classes (no/yes/fixed)
+- Training Data: 1800 images (Medium Dataset)
+- Test Accuracy: 99.13% ⭐ (на независимом тесте 10,000 изображений)
+- Full Dataset Accuracy: 99.13% (на полном датасете 162,674 изображений)
+- Model Size: 9.7 MB (в 3 раза меньше!)
+
+Результаты сравнения моделей:
+1. 🥇 Medium Model (эта): 99.13% - MobileNetV2
+2. 🥈 Large Model: 98.02% - ResNet18  
+3. 🥉 Ultra Model: 96.90% - EfficientNet-B0
 
 Usage in Android:
-1. Load model: PyTorch Mobile
-2. Preprocess image: resize to 224x224, normalize
-3. Run inference
-4. Get probabilities for empty/filled classes
+1. Load model: ONNX Runtime
+2. Preprocess image: resize to 64x64, normalize
+3. Run inference  
+4. Get probabilities for no/yes/fixed classes
 
 Model Files:
-- omr_model.pt: TorchScript model
-- model_config.json: Configuration
+- omr_model_best.onnx: ONNX optimized model
+- model_metadata.json: Configuration
 
-Created: 2025-07-28 02:31:36
+Trained: 2025-08-09
+Best model selected from 5 trained variants!

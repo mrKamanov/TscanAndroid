@@ -3,6 +3,16 @@ package com.example.myapplication.models
 import android.graphics.Bitmap
 
 /**
+ * Информация об исправлении ответа
+ */
+data class FixedAnswer(
+    val questionNumber: Int,         // Номер вопроса (1-based)
+    val choiceNumber: Int,          // Номер варианта ответа (1-based)
+    val isCorrectChoice: Boolean,   // Был ли исправленный ответ правильным
+    val cellBitmap: Bitmap?         // Превью ячейки с исправлением
+)
+
+/**
  * Результаты OMR обработки тестового бланка
  */
 data class OMRResult(
@@ -11,7 +21,8 @@ data class OMRResult(
     val incorrectQuestions: List<Map<String, Any>>,
     val correctAnswers: List<Int>,
     val visualization: Bitmap? = null,
-    val gridVisualization: Bitmap? = null
+    val gridVisualization: Bitmap? = null,
+    val fixedAnswers: List<FixedAnswer> = emptyList() // Список исправлений
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

@@ -39,7 +39,9 @@ interface ModelInterface {
 data class PredictionResult(
     val isFilled: Boolean,
     val confidence: Float,
-    val probabilities: FloatArray
+    val probabilities: FloatArray,
+    val predictedClass: String = "", // "no", "yes", "fixed"
+    val isFixed: Boolean = false // true если обнаружено исправление
 ) {
     /**
      * Проверяет, достаточно ли высока уверенность
@@ -52,7 +54,11 @@ data class PredictionResult(
      * Получает текстовое описание результата
      */
     fun getDescription(): String {
-        val status = if (isFilled) "ЗАПОЛНЕНО" else "ПУСТОЕ"
+        val status = when {
+            isFixed -> "ИСПРАВЛЕНИЕ"
+            isFilled -> "ЗАПОЛНЕНО"
+            else -> "ПУСТОЕ"
+        }
         val confidencePercent = (confidence * 100).toInt()
         return "$status ($confidencePercent%)"
     }

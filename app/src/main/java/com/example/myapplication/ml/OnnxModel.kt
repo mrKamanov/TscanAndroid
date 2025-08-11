@@ -22,7 +22,7 @@ class OnnxModel(
     
     companion object {
         private const val TAG = "OnnxModel"
-        private const val INPUT_SIZE = 224
+        private const val INPUT_SIZE = 128
     }
     
     private var session: OrtSession? = null
@@ -38,7 +38,7 @@ class OnnxModel(
             Log.i(TAG, "🔄 Инициализация ONNX модели...")
             
             // Проверяем наличие файла модели
-            val tempFile = File(context.cacheDir, "omr_model_optimized.onnx")
+            val tempFile = File(context.cacheDir, "omr_model_best.onnx")
             if (!tempFile.exists()) {
                 Log.i(TAG, "📁 Копируем ONNX модель во временную директорию...")
                 context.assets.open(modelPath).use { input ->
@@ -108,7 +108,7 @@ class OnnxModel(
     override fun predict(bitmap: Bitmap): PredictionResult {
         if (!isReady()) {
             Log.e(TAG, "❌ ONNX модель не готова")
-            return PredictionResult(isFilled = false, confidence = 0f, probabilities = floatArrayOf(0f, 0f))
+            return PredictionResult(isFilled = false, confidence = 0f, probabilities = floatArrayOf(0f, 0f, 0f), predictedClass = "no", isFixed = false)
         }
         
         try {
@@ -144,7 +144,7 @@ class OnnxModel(
         } catch (e: Exception) {
             Log.e(TAG, "❌ Ошибка предсказания ONNX модели: ${e.message}")
             e.printStackTrace()
-            return PredictionResult(isFilled = false, confidence = 0f, probabilities = floatArrayOf(0f, 0f))
+            return PredictionResult(isFilled = false, confidence = 0f, probabilities = floatArrayOf(0f, 0f, 0f), predictedClass = "no", isFixed = false)
         }
     }
     
@@ -152,7 +152,7 @@ class OnnxModel(
         if (!isReady()) {
             Log.e(TAG, "❌ ONNX модель не готова")
             return List(bitmaps.size) { 
-                PredictionResult(isFilled = false, confidence = 0f, probabilities = floatArrayOf(0f, 0f)) 
+                PredictionResult(isFilled = false, confidence = 0f, probabilities = floatArrayOf(0f, 0f, 0f), predictedClass = "no", isFixed = false) 
             }
         }
         
@@ -235,22 +235,47 @@ class OnnxModel(
     
     /**
      * Постобрабатывает результаты ONNX модели
+     * Классы: 0 = no (пустая), 1 = yes (заполненная), 2 = fixed (исправленная)
      */
     private fun postprocessResults(probabilities: FloatArray): PredictionResult {
         // Применяем softmax (если нужно)
-        val maxProb = probabilities.maxOrNull() ?: 0f
-        val expProbs = probabilities.map { Math.exp((it - maxProb).toDouble()).toFloat() }
+        val maxRawProb = probabilities.maxOrNull() ?: 0f
+        val expProbs = probabilities.map { Math.exp((it - maxRawProb).toDouble()).toFloat() }
         val sumExp = expProbs.sum()
         val softmaxProbs = expProbs.map { it / sumExp }.toFloatArray()
 
         // Определяем результат
-        val filledProb = softmaxProbs[1] // Индекс 1 = filled
-        val isFilled = filledProb > config.confidenceThreshold
+        val noProb = softmaxProbs[0]      // no (пустая)
+        val yesProb = softmaxProbs[1]     // yes (заполненная)
+        val fixedProb = softmaxProbs[2]   // fixed (исправленная)
+        
+        // Определяем класс с максимальной вероятностью
+        val maxProbIndex = softmaxProbs.indices.maxByOrNull { softmaxProbs[it] } ?: 0
+        val maxProb = softmaxProbs[maxProbIndex]
+        
+        // Проверяем уверенность в предсказании
+        val isConfident = maxProb > config.confidenceThreshold
+        
+        // Логика определения заполненности:
+        // - yes = заполнена чисто
+        // - fixed = требует решения пользователя (пока считаем незаполненной)
+        // - no = пустая
+        val isFilled = when {
+            isConfident && maxProbIndex == 1 -> true  // yes = заполнена
+            else -> false  // no или fixed = не заполнена (для fixed будет спрашивать пользователя)
+        }
+
+        // Определяем класс и состояние
+        val classNames = arrayOf("no", "yes", "fixed")
+        val predictedClass = if (isConfident) classNames[maxProbIndex] else "no"
+        val isFixed = isConfident && maxProbIndex == 2
 
         return PredictionResult(
             isFilled = isFilled,
-            confidence = filledProb,
-            probabilities = softmaxProbs
+            confidence = maxProb,
+            probabilities = softmaxProbs,
+            predictedClass = predictedClass,
+            isFixed = isFixed
         )
     }
 } 

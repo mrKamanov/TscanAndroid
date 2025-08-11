@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/dialog_background_dark"
+    android:padding="20dp">
+
+    <!-- Заголовок -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="⚠️ Исправление обнаружено"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_inverse"
+        android:fontFamily="@font/krabuler"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Информация о вопросе в стиле batch -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Детали исправления:"
+        android:textColor="@color/text_secondary"
+        android:fontFamily="@font/krabuler"
+        android:layout_marginBottom="12dp" />
+
+    <!-- Карточка с информацией -->
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        app:cardBackgroundColor="@color/card_background"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="4dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="8dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Вопрос:"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp"
+                    android:fontFamily="@font/krabuler" />
+
+                <TextView
+                    android:id="@+id/tvQuestionNumber"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="1"
+                    android:textColor="@color/primary_blue"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:fontFamily="@font/krabuler" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Ответ:"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp"
+                    android:fontFamily="@font/krabuler" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/tvChoiceNumber"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="1"
+                        android:textColor="@color/primary_blue"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:fontFamily="@font/krabuler" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text=" (правильный)"
+                        android:textColor="@color/success_green"
+                        android:textSize="14sp"
+                        android:fontFamily="@font/krabuler"
+                        android:layout_marginStart="4dp" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <!-- Превью ячейки в CardView -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Превью ячейки с исправлением:"
+        android:textColor="@color/text_secondary"
+        android:fontFamily="@font/krabuler"
+        android:layout_marginBottom="12dp" />
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        app:cardBackgroundColor="@color/card_background"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="4dp">
+
+        <ImageView
+            android:id="@+id/ivCellPreview"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:layout_gravity="center"
+            android:scaleType="fitCenter"
+            android:adjustViewBounds="true"
+            android:padding="8dp" />
+
+    </androidx.cardview.widget.CardView>
+
+    <!-- Описание -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Ученик исправил правильный ответ. Считать ошибкой?"
+        android:textSize="14sp"
+        android:textColor="@color/text_secondary"
+        android:fontFamily="@font/krabuler"
+        android:gravity="center"
+        android:layout_marginBottom="20dp" />
+
+    <!-- ========== ДВЕ КНОПКИ В ЕДИНОМ ОВАЛЬНОМ СТИЛЕ ========== -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <!-- Кнопка НЕТ (зеленая - оставить правильным) -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnNo"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:text="НЕТ"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:fontFamily="@font/krabuler"
+            android:backgroundTint="#16A34A"
+            app:cornerRadius="24dp"
+            app:strokeColor="#475569"
+            app:strokeWidth="2dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:layout_marginEnd="8dp"
+            android:elevation="0dp"
+            android:stateListAnimator="@null"
+            style="@style/Widget.MaterialComponents.Button"
+            android:contentDescription="Оставить правильным ответом" />
+
+        <!-- Кнопка ДА (красная - считать ошибкой) -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnYes"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:text="ДА"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:fontFamily="@font/krabuler"
+            android:backgroundTint="#DC2626"
+            app:cornerRadius="24dp"
+            app:strokeColor="#475569"
+            app:strokeWidth="2dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:layout_marginStart="8dp"
+            android:elevation="0dp"
+            android:stateListAnimator="@null"
+            style="@style/Widget.MaterialComponents.Button"
+            android:contentDescription="Считать ошибкой" />
+    </LinearLayout>
+
+</LinearLayout>
