@@ -10,6 +10,6 @@
         android:text="Инструкция"
         android:textSize="24sp"
         android:textStyle="bold"
-        android:textColor="@color/text_inverse"
+        android:textColor="#CBD5E1"
         android:layout_gravity="center" />
 </FrameLayout> 

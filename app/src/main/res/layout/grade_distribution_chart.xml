@@ -20,7 +20,7 @@
             android:layout_height="wrap_content"
             android:text="📊 Распределение оценок"
             android:textSize="18sp"
-            android:textColor="@color/white"
+            android:textColor="#CBD5E1"
             android:fontFamily="@font/krabuler"
             android:layout_marginBottom="16dp" />
 

@@ -14,7 +14,7 @@
         android:text="⚠️ Исправление обнаружено"
         android:textSize="20sp"
         android:textStyle="bold"
-        android:textColor="@color/text_inverse"
+        android:textColor="#CBD5E1"
         android:fontFamily="@font/krabuler"
         android:layout_marginBottom="16dp" />
 
@@ -168,7 +168,7 @@
             android:layout_height="48dp"
             android:layout_weight="1"
             android:text="НЕТ"
-            android:textColor="#FFFFFF"
+            android:textColor="#CBD5E1"
             android:textStyle="bold"
             android:textSize="14sp"
             android:fontFamily="@font/krabuler"
@@ -191,7 +191,7 @@
             android:layout_height="48dp"
             android:layout_weight="1"
             android:text="ДА"
-            android:textColor="#FFFFFF"
+            android:textColor="#CBD5E1"
             android:textStyle="bold"
             android:textSize="14sp"
             android:fontFamily="@font/krabuler"

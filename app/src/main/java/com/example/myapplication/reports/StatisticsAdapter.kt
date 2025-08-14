@@ -20,6 +20,7 @@ class StatisticsAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         private const val TYPE_ERROR_ANALYSIS = 3
         private const val TYPE_QUESTION_HEATMAP = 4
         private const val TYPE_RELATED_ERRORS = 5
+        private const val TYPE_IDENTICAL_WORKS = 6
     }
     
     private var statistics: Map<String, Any> = emptyMap()
@@ -41,6 +42,7 @@ class StatisticsAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
             3 -> TYPE_ERROR_ANALYSIS
             4 -> TYPE_QUESTION_HEATMAP
             5 -> TYPE_RELATED_ERRORS
+            6 -> TYPE_IDENTICAL_WORKS
             else -> TYPE_HEADER
         }
         Log.d("StatisticsAdapter", "📊 getItemViewType() позиция $position -> тип $viewType")
@@ -81,6 +83,11 @@ class StatisticsAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
                     .inflate(R.layout.related_errors_chart, parent, false)
                 RelatedErrorsViewHolder(view)
             }
+            TYPE_IDENTICAL_WORKS -> {
+                val view = LayoutInflater.from(parent.context)
+                    .inflate(R.layout.identical_works_chart, parent, false)
+                IdenticalWorksViewHolder(view)
+            }
             else -> throw IllegalArgumentException("Unknown view type")
         }
     }
@@ -97,10 +104,11 @@ class StatisticsAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
                 holder.bind(statistics["questionHeatmap"] as? List<Map<String, Any>> ?: emptyList())
             }
             is RelatedErrorsViewHolder -> holder.bind(statistics["relatedErrors"] as? List<Map<String, Any>> ?: emptyList())
+            is IdenticalWorksViewHolder -> holder.bind(statistics["identicalWorks"] as? List<Map<String, Any>> ?: emptyList())
         }
     }
     
-    override fun getItemCount(): Int = 6
+    override fun getItemCount(): Int = 7
     
     class HeaderViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         fun bind() {
@@ -157,10 +165,10 @@ class StatisticsAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
             tvSouValue.text = String.format("СОУ %.0f%%", sou)
             
             // Устанавливаем цвета карточек
-            cardTotalWorks.setCardBackgroundColor(Color.parseColor("#4CAF50"))
-            cardAverageGrade.setCardBackgroundColor(Color.parseColor("#2196F3"))
-            cardSuccessRate.setCardBackgroundColor(Color.parseColor("#FF9800"))
-            cardBestResult.setCardBackgroundColor(Color.parseColor("#9C27B0"))
+            cardTotalWorks.setCardBackgroundColor(Color.parseColor("#99A3BE8C"))
+            cardAverageGrade.setCardBackgroundColor(Color.parseColor("#993B82F6"))
+            cardSuccessRate.setCardBackgroundColor(Color.parseColor("#99E8B4D2"))
+            cardBestResult.setCardBackgroundColor(Color.parseColor("#99DC2626"))
         }
     }
     
@@ -536,6 +544,74 @@ class StatisticsAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
             
             layout.addView(headerLayout)
             layout.addView(detailText)
+            
+            return layout
+        }
+    }
+    
+    class IdenticalWorksViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        private val container: LinearLayout = itemView.findViewById(R.id.identical_works_container)
+        private val tvTitle: TextView = itemView.findViewById(R.id.tv_identical_works_title)
+        
+        fun bind(identicalWorks: List<Map<String, Any>>) {
+            tvTitle.text = "🔍 Идентичные работы"
+            container.removeAllViews()
+            
+            if (identicalWorks.isEmpty()) {
+                val emptyText = TextView(itemView.context).apply {
+                    text = "Нет идентичных работ для анализа"
+                    setTextColor(Color.GRAY)
+                    textAlignment = View.TEXT_ALIGNMENT_CENTER
+                    setPadding(0, 20, 0, 20)
+                }
+                container.addView(emptyText)
+                return
+            }
+            
+            // Добавляем описание
+            val descriptionText = TextView(itemView.context).apply {
+                text = "Работы с полностью одинаковыми ответами на все вопросы"
+                setTextColor(Color.parseColor("#B0B0B0"))
+                textSize = 12f
+                setPadding(0, 0, 0, 16)
+            }
+            container.addView(descriptionText)
+            
+            identicalWorks.forEach { group ->
+                val answerPattern = group["answerPattern"] as? String ?: ""
+                val worksCount = group["worksCount"] as? Int ?: 0
+                val totalWorks = group["totalWorks"] as? Int ?: 0
+                val percentage = group["percentage"] as? Double ?: 0.0
+                val workNames = group["workNames"] as? List<String> ?: emptyList()
+                
+                val groupView = createIdenticalWorksGroup(itemView.context, worksCount, totalWorks, percentage, workNames)
+                container.addView(groupView)
+            }
+        }
+        
+        private fun createIdenticalWorksGroup(context: android.content.Context, worksCount: Int, totalWorks: Int, percentage: Double, workNames: List<String>): View {
+            val layout = LinearLayout(context).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(0, 8, 0, 8)
+            }
+            
+            val worksText = TextView(context).apply {
+                text = "Работы ${workNames.joinToString(", ")} имеют одинаковые ответы"
+                setTextColor(Color.WHITE)
+                textSize = 14f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setPadding(0, 0, 0, 8)
+            }
+            
+            val percentageText = TextView(context).apply {
+                text = "${String.format("%.1f", percentage)}% от общего количества"
+                setTextColor(Color.parseColor("#FFD700"))
+                textSize = 12f
+                setPadding(0, 4, 0, 0)
+            }
+            
+            layout.addView(worksText)
+            layout.addView(percentageText)
             
             return layout
         }

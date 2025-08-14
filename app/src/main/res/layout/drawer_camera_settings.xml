@@ -34,7 +34,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Настройки камеры"
-            android:textColor="@color/text"
+            android:textColor="#CBD5E1"
             android:textSize="18sp"
             android:textStyle="bold"
             android:fontFamily="@font/krabuler" />
@@ -44,7 +44,7 @@
             android:layout_height="32dp"
             android:background="@android:color/transparent"
             android:contentDescription="Закрыть"
-            android:tint="@color/text" />
+            android:tint="#CBD5E1" />
     </LinearLayout>
 
     <View
@@ -64,7 +64,7 @@
         android:textStyle="bold"
         android:textSize="14sp"
         app:icon="@drawable/ic_cancel"
-        app:iconTint="#CBD5E1"
+        app:iconTint="#475569"
         app:iconGravity="textStart"
         app:iconSize="20dp"
         android:backgroundTint="#1E293B"

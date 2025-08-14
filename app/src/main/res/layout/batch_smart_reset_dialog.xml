@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/dialog_background_dark"
+    android:padding="20dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Начать заново"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_inverse"
+        android:fontFamily="@font/krabuler"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Выберите, что хотите сбросить:"
+        android:textColor="@color/text_secondary"
+        android:layout_marginBottom="16dp" />
+
+    <!-- ========== ЧЕТЫРЕ КНОПКИ В ЕДИНОМ ОВАЛЬНОМ СТИЛЕ ========== -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginBottom="16dp">
+
+        <!-- Кнопка Сбросить все -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_reset_all"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="Сбросить все (работы + результаты)"
+            android:textColor="#CBD5E1"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:fontFamily="@font/krabuler"
+            android:backgroundTint="#1E293B"
+            app:cornerRadius="24dp"
+            app:strokeColor="#475569"
+            app:strokeWidth="2dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:layout_marginBottom="8dp"
+            android:elevation="0dp"
+            android:stateListAnimator="@null"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:contentDescription="Сбросить все работы и результаты" />
+
+        <!-- Кнопка Сбросить только результаты -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_reset_results"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="Сбросить только результаты"
+            android:textColor="#CBD5E1"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:fontFamily="@font/krabuler"
+            android:backgroundTint="#1E293B"
+            app:cornerRadius="24dp"
+            app:strokeColor="#475569"
+            app:strokeWidth="2dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:layout_marginBottom="8dp"
+            android:elevation="0dp"
+            android:stateListAnimator="@null"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:contentDescription="Сбросить только результаты, оставить загруженные работы" />
+
+        <!-- Кнопка Сбросить только загруженные работы -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_reset_works"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="Сбросить только загруженные работы"
+            android:textColor="#CBD5E1"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:fontFamily="@font/krabuler"
+            android:backgroundTint="#1E293B"
+            app:cornerRadius="24dp"
+            app:strokeColor="#475569"
+            app:strokeWidth="2dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:layout_marginBottom="8dp"
+            android:elevation="0dp"
+            android:stateListAnimator="@null"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:contentDescription="Сбросить только загруженные работы, оставить результаты" />
+    </LinearLayout>
+
+    <!-- ========== ДВЕ КНОПКИ В ЕДИНОМ ОВАЛЬНОМ СТИЛЕ ========== -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <!-- Кнопка Отмена (серая овальная как в шаблоне) -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_cancel"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:text="Отмена"
+            android:textColor="#CBD5E1"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:fontFamily="@font/krabuler"
+            android:backgroundTint="#1E293B"
+            app:cornerRadius="24dp"
+            app:strokeColor="#475569"
+            app:strokeWidth="2dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:layout_marginEnd="8dp"
+            android:elevation="0dp"
+            android:stateListAnimator="@null"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:contentDescription="Отменить сброс" />
+
+        <!-- Кнопка Подтвердить (зеленая овальная как в шаблоне) -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_confirm"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:text="Подтвердить"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:fontFamily="@font/krabuler"
+            android:backgroundTint="#16A34A"
+            app:cornerRadius="24dp"
+            app:strokeColor="#475569"
+            app:strokeWidth="2dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:layout_marginStart="8dp"
+            android:elevation="0dp"
+            android:stateListAnimator="@null"
+            style="@style/Widget.MaterialComponents.Button"
+            android:contentDescription="Подтвердить выбранный тип сброса" />
+    </LinearLayout>
+
+</LinearLayout>

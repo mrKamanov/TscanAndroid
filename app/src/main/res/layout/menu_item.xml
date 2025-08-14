@@ -41,7 +41,7 @@
             android:layout_height="40dp"
             android:layout_gravity="center"
             android:contentDescription="@string/menu_icon_desc"
-            android:tint="@color/text"
+            android:tint="#CBD5E1"
             android:layout_marginBottom="12dp"
             android:layout_marginTop="4dp" />
 
@@ -49,7 +49,7 @@
             android:id="@+id/menu_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/text"
+            android:textColor="#CBD5E1"
             android:textSize="18sp"
             android:textStyle="bold"
             android:fontFamily="@font/krabuler"
@@ -60,7 +60,7 @@
             android:id="@+id/menu_desc"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/text"
+            android:textColor="#CBD5E1"
             android:textSize="14sp"
             android:fontFamily="@font/krabuler"
             android:layout_marginTop="8dp"

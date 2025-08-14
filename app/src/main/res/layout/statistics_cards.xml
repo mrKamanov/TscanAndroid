@@ -11,7 +11,7 @@
         android:layout_height="wrap_content"
         android:text="📈 Общая статистика"
         android:textSize="18sp"
-        android:textColor="@color/white"
+        android:textColor="#CBD5E1"
         android:fontFamily="@font/krabuler"
         android:layout_marginBottom="16dp" />
 
@@ -30,7 +30,7 @@
             android:layout_columnWeight="1"
             app:cardCornerRadius="12dp"
             app:cardElevation="8dp"
-            app:cardBackgroundColor="@color/success_green">
+            app:cardBackgroundColor="#99A3BE8C">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -52,7 +52,7 @@
                     android:layout_height="wrap_content"
                     android:text="0"
                     android:textSize="24sp"
-                    android:textColor="@color/white"
+                    android:textColor="#CBD5E1"
                     android:fontFamily="@font/krabuler"
                     android:textStyle="bold" />
 
@@ -61,7 +61,7 @@
                     android:layout_height="wrap_content"
                     android:text="Всего работ"
                     android:textSize="12sp"
-                    android:textColor="@color/white"
+                    android:textColor="#CBD5E1"
                     android:fontFamily="@font/krabuler" />
 
             </LinearLayout>
@@ -76,7 +76,7 @@
             android:layout_columnWeight="1"
             app:cardCornerRadius="12dp"
             app:cardElevation="8dp"
-            app:cardBackgroundColor="#2196F3">
+            app:cardBackgroundColor="#993B82F6">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -98,7 +98,7 @@
                     android:layout_height="wrap_content"
                     android:text="0.0"
                     android:textSize="24sp"
-                    android:textColor="@color/white"
+                    android:textColor="#CBD5E1"
                     android:fontFamily="@font/krabuler"
                     android:textStyle="bold" />
 
@@ -107,7 +107,7 @@
                     android:layout_height="wrap_content"
                     android:text="Средний балл"
                     android:textSize="12sp"
-                    android:textColor="@color/white"
+                    android:textColor="#CBD5E1"
                     android:fontFamily="@font/krabuler" />
 
             </LinearLayout>
@@ -122,7 +122,7 @@
             android:layout_columnWeight="1"
             app:cardCornerRadius="12dp"
             app:cardElevation="8dp"
-            app:cardBackgroundColor="#FF9800">
+            app:cardBackgroundColor="#99E8B4D2">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -144,7 +144,7 @@
                     android:layout_height="wrap_content"
                     android:text="0%"
                     android:textSize="24sp"
-                    android:textColor="@color/white"
+                    android:textColor="#CBD5E1"
                     android:fontFamily="@font/krabuler"
                     android:textStyle="bold" />
 
@@ -153,7 +153,7 @@
                     android:layout_height="wrap_content"
                     android:text="Успеваемость"
                     android:textSize="12sp"
-                    android:textColor="@color/white"
+                    android:textColor="#CBD5E1"
                     android:fontFamily="@font/krabuler" />
 
             </LinearLayout>
@@ -168,7 +168,7 @@
             android:layout_columnWeight="1"
             app:cardCornerRadius="12dp"
             app:cardElevation="8dp"
-            app:cardBackgroundColor="#9C27B0">
+            app:cardBackgroundColor="#99DC2626">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -190,7 +190,7 @@
                     android:layout_height="wrap_content"
                     android:text="К/з 0%"
                     android:textSize="16sp"
-                    android:textColor="@color/white"
+                    android:textColor="#CBD5E1"
                     android:fontFamily="@font/krabuler"
                     android:textStyle="bold" />
 
@@ -200,7 +200,7 @@
                     android:layout_height="wrap_content"
                     android:text="СОУ 0%"
                     android:textSize="16sp"
-                    android:textColor="@color/white"
+                    android:textColor="#CBD5E1"
                     android:fontFamily="@font/krabuler"
                     android:textStyle="bold" />
 

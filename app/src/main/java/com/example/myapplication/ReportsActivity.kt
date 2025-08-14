@@ -8,7 +8,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.*
-import android.widget.Button
+import com.google.android.material.button.MaterialButton
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.EditText
@@ -227,89 +227,38 @@ class ReportsActivity : AppCompatActivity() {
     }
     
     private fun deleteReport(report: ReportsManager.Report) {
-        AlertDialog.Builder(this)
-            .setTitle("Удаление отчета")
-            .setMessage("Вы уверены, что хотите удалить отчет '${report.title}'?")
-            .setPositiveButton("Удалить") { _, _ ->
-                reportsManager.deleteReport(report.id)
-                loadReports()
-                loadStatistics()
-                    Toast.makeText(this, "Отчет удален", Toast.LENGTH_SHORT).show()
-            }
-            .setNegativeButton("Отмена", null)
-            .show()
-    }
-    
-    private fun showCriteriaSettingsDialog() {
-        val dialogView = layoutInflater.inflate(R.layout.criteria_settings_dialog, null)
-        val criteriaContainer = dialogView.findViewById<LinearLayout>(R.id.criteria_container)
-        val currentCriteria = reportsManager.getCurrentCriteria()
-        
-        // Создаем диалог заранее
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.delete_report_dialog, null)
         val dialog = AlertDialog.Builder(this, R.style.CustomAlertDialog)
             .setView(dialogView)
-            .setCancelable(true)
             .create()
-        
-        criteriaContainer.removeAllViews()
-        
-        reportsManager.getCriteriaList().forEach { criteria ->
-            val criteriaView = layoutInflater.inflate(R.layout.criteria_item, criteriaContainer, false)
-            
-            criteriaView.findViewById<TextView>(R.id.tv_criteria_name).text = criteria.name
-            criteriaView.findViewById<TextView>(R.id.tv_criteria_type).text = 
-                if (criteria.type == ReportsManager.CriteriaType.PERCENTAGE) "По процентам" else "По баллам"
-            
-            val currentIndicator = criteriaView.findViewById<TextView>(R.id.current_indicator)
-            if (criteria.id == currentCriteria?.id) {
-                currentIndicator.text = "✓"
-                currentIndicator.setTextColor(android.graphics.Color.parseColor("#4CAF50"))
-                currentIndicator.visibility = View.VISIBLE
-            } else {
-                currentIndicator.visibility = View.GONE
-            }
-            
-            criteriaView.setOnClickListener {
-                reportsManager.setCurrentCriteria(criteria.id)
-                reportsManager.recalculateAllGrades()
-                loadReports()
-                loadStatistics()
-                updateCurrentCriteriaText()
-                Toast.makeText(this, "Критерии изменены", Toast.LENGTH_SHORT).show()
-                dialog.dismiss()
-            }
-            
-            criteriaContainer.addView(criteriaView)
-        }
-        
-        // Кнопка удаления (только для не-дефолтных критериев)
-        val btnDelete = dialogView.findViewById<Button>(R.id.btn_delete_criteria)
-        btnDelete.setOnClickListener {
-            val nonDefaultCriteria = reportsManager.getCriteriaList().filter { it.id != "default" }
-            if (nonDefaultCriteria.isNotEmpty()) {
-                val criteriaToDelete = nonDefaultCriteria.first()
-                val success = reportsManager.deleteCriteria(criteriaToDelete.id)
-                if (success) {
-                    loadReports()
-                    loadStatistics()
-                    updateCurrentCriteriaText()
-                    Toast.makeText(this, "Критерии удалены", Toast.LENGTH_SHORT).show()
-                    dialog.dismiss()
-                } else {
-                    Toast.makeText(this, "Не удалось удалить критерии", Toast.LENGTH_SHORT).show()
-                }
-            } else {
-                Toast.makeText(this, "Нет критериев для удаления", Toast.LENGTH_SHORT).show()
-            }
-        }
-        
-        // Кнопка закрытия
-        dialogView.findViewById<Button>(R.id.btn_close).setOnClickListener {
+
+        // Убираем белые углы
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+
+        // Настраиваем информацию об отчете
+        val tvReportInfo = dialogView.findViewById<TextView>(R.id.tv_report_info)
+        tvReportInfo.text = "Вы уверены, что хотите удалить отчет '${report.title}'?"
+
+        // Настраиваем кнопки
+        val btnCancel = dialogView.findViewById<MaterialButton>(R.id.btn_cancel_delete)
+        val btnDelete = dialogView.findViewById<MaterialButton>(R.id.btn_confirm_delete)
+
+        btnCancel.setOnClickListener {
             dialog.dismiss()
         }
-        
+
+        btnDelete.setOnClickListener {
+            reportsManager.deleteReport(report.id)
+            loadReports()
+            loadStatistics()
+            Toast.makeText(this, "Отчет удален", Toast.LENGTH_SHORT).show()
+            dialog.dismiss()
+        }
+
         dialog.show()
     }
+    
+
     
     private fun showAddCriteriaDialog() {
         val dialogView = layoutInflater.inflate(R.layout.add_criteria_dialog, null)
@@ -342,13 +291,16 @@ class ReportsActivity : AppCompatActivity() {
             .setCancelable(true)
             .create()
         
+        // Убираем белые углы
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        
         // Кнопка отмены
-        dialogView.findViewById<Button>(R.id.btn_cancel).setOnClickListener {
+        dialogView.findViewById<MaterialButton>(R.id.btn_cancel).setOnClickListener {
             dialog.dismiss()
         }
         
         // Кнопка сохранения
-        dialogView.findViewById<Button>(R.id.btn_save).setOnClickListener {
+        dialogView.findViewById<MaterialButton>(R.id.btn_save).setOnClickListener {
             val name = etName.text.toString()
             if (name.isNotEmpty()) {
                 val isPercentage = rgCriteriaType.checkedRadioButtonId == R.id.rb_percentage
@@ -456,13 +408,10 @@ class ReportsActivity : AppCompatActivity() {
      */
     private fun createProgressDialog(): AlertDialog {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.progress_dialog, null)
-        val dialog = AlertDialog.Builder(this)
+        val dialog = AlertDialog.Builder(this, R.style.CustomAlertDialog)
             .setView(dialogView)
             .setCancelable(false)
             .create()
-        
-        // Убираем белые углы
-        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
         
         return dialog
     }
@@ -496,7 +445,7 @@ class ReportsActivity : AppCompatActivity() {
 
     private fun showExportSuccessDialog(file: File) {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.export_success_dialog, null)
-        val dialog = AlertDialog.Builder(this)
+        val dialog = AlertDialog.Builder(this, R.style.CustomAlertDialog)
             .setView(dialogView)
             .setCancelable(false)
             .create()
@@ -509,19 +458,19 @@ class ReportsActivity : AppCompatActivity() {
         tvFileInfo.text = "Файл: ${file.name}\nСохранен в папке 'Загрузки'"
         
         // Кнопка "Открыть папку"
-        dialogView.findViewById<Button>(R.id.btn_open_file).setOnClickListener {
+        dialogView.findViewById<MaterialButton>(R.id.btn_open_file).setOnClickListener {
             dialog.dismiss()
             openFileLocation(file)
         }
         
         // Кнопка "Отправить"
-        dialogView.findViewById<Button>(R.id.btn_share_file).setOnClickListener {
+        dialogView.findViewById<MaterialButton>(R.id.btn_share_file).setOnClickListener {
             dialog.dismiss()
             shareExcelFile(file)
         }
         
         // Кнопка "Закрыть"
-        dialogView.findViewById<Button>(R.id.btn_close).setOnClickListener {
+        dialogView.findViewById<MaterialButton>(R.id.btn_close).setOnClickListener {
             dialog.dismiss()
         }
         
@@ -747,19 +696,33 @@ class ReportsActivity : AppCompatActivity() {
     }
     
     private fun showResetReportsDialog() {
-        AlertDialog.Builder(this)
-            .setTitle("🗑️ Сброс отчетов")
-            .setMessage("Вы уверены, что хотите удалить все отчеты? Это действие нельзя отменить.")
-            .setPositiveButton("Удалить") { _, _ ->
-                val reports = reportsManager.getReports()
-                reports.forEach { report ->
-                    reportsManager.deleteReport(report.id)
-                }
-                loadReports()
-                loadStatistics()
-                Toast.makeText(this, "🗑️ Все отчеты удалены", Toast.LENGTH_SHORT).show()
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.reset_reports_dialog, null)
+        val dialog = AlertDialog.Builder(this, R.style.CustomAlertDialog)
+            .setView(dialogView)
+            .create()
+
+        // Убираем белые углы
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+
+        // Настраиваем кнопки
+        val btnCancel = dialogView.findViewById<MaterialButton>(R.id.btn_cancel_reset)
+        val btnDelete = dialogView.findViewById<MaterialButton>(R.id.btn_delete_reports)
+
+        btnCancel.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        btnDelete.setOnClickListener {
+            val reports = reportsManager.getReports()
+            reports.forEach { report ->
+                reportsManager.deleteReport(report.id)
             }
-            .setNegativeButton("Отмена", null)
-            .show()
+            loadReports()
+            loadStatistics()
+            Toast.makeText(this, "🗑️ Все отчеты удалены", Toast.LENGTH_SHORT).show()
+            dialog.dismiss()
+        }
+
+        dialog.show()
     }
 } 

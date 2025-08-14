@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/dialog_background_dark"
+    android:padding="20dp">
+
+    <!-- Иконка и заголовок -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="16dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🗑️"
+            android:textSize="24sp"
+            android:layout_marginEnd="12dp" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Сброс отчетов"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="#CBD5E1"
+            android:fontFamily="@font/krabuler" />
+    </LinearLayout>
+
+    <!-- Описание -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Вы уверены, что хотите удалить все отчеты? Это действие нельзя отменить."
+        android:textColor="@color/text_secondary"
+        android:textSize="14sp"
+        android:fontFamily="@font/krabuler"
+        android:layout_marginBottom="20dp" />
+
+    <!-- Предупреждение -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@drawable/edit_text_background"
+        android:padding="12dp"
+        android:layout_marginBottom="20dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="⚠️"
+            android:textSize="16sp"
+            android:layout_marginEnd="8dp" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Все данные будут безвозвратно удалены"
+            android:textColor="#BF616A"
+            android:textSize="12sp"
+            android:fontFamily="@font/krabuler"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <!-- Кнопки -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <!-- Кнопка Отмена (серая овальная) -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_cancel_reset"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:text="Отмена"
+            android:textColor="#CBD5E1"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:fontFamily="@font/krabuler"
+            android:backgroundTint="#1E293B"
+            app:cornerRadius="24dp"
+            app:strokeColor="#475569"
+            app:strokeWidth="2dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:layout_marginEnd="8dp"
+            android:elevation="0dp"
+            android:stateListAnimator="@null"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:contentDescription="Отменить сброс отчетов" />
+
+        <!-- Кнопка Удалить (красная овальная) -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_delete_reports"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:text="Удалить"
+            android:textColor="#CBD5E1"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:fontFamily="@font/krabuler"
+            android:backgroundTint="#BF616A"
+            app:cornerRadius="24dp"
+            app:strokeColor="#DC2626"
+            app:strokeWidth="2dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:layout_marginStart="8dp"
+            android:elevation="0dp"
+            android:stateListAnimator="@null"
+            style="@style/Widget.MaterialComponents.Button"
+            android:contentDescription="Удалить все отчеты" />
+    </LinearLayout>
+
+</LinearLayout>

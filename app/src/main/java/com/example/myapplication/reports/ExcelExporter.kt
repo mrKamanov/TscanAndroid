@@ -340,12 +340,52 @@ class ExcelExporter(private val context: Context) {
             row.createCell(3).apply { setCellValue(String.format("%.1f%%", correlation * 100)); cellStyle = dataStyle }
         }
         
+        rowNum += 2 // Пропуск строк
+        
+        // Идентичные работы
+        val identicalTitleRow = sheet.createRow(rowNum++)
+        val identicalTitleCell = identicalTitleRow.createCell(0)
+        identicalTitleCell.setCellValue("🔍 Идентичные работы")
+        identicalTitleCell.cellStyle = titleStyle
+        sheet.addMergedRegion(CellRangeAddress(rowNum - 1, rowNum - 1, 0, 4))
+        
+        rowNum++
+        
+        val identicalHeaderRow = sheet.createRow(rowNum++)
+        val identicalHeaders = listOf("Паттерн ответов", "Количество работ", "Процент", "Номера работ")
+        identicalHeaders.forEachIndexed { index, header ->
+            val cell = identicalHeaderRow.createCell(index)
+            cell.setCellValue(header)
+            cell.cellStyle = headerStyle
+        }
+        
+        val identicalWorks = statistics["identicalWorks"] as? List<Map<String, Any>> ?: emptyList()
+        identicalWorks.forEach { group ->
+            val row = sheet.createRow(rowNum++)
+            
+            val answerPattern = group["answerPattern"] as? String ?: ""
+            val worksCount = group["worksCount"] as? Int ?: 0
+            val percentage = group["percentage"] as? Double ?: 0.0
+            val workNames = group["workNames"] as? List<String> ?: emptyList()
+            
+            row.createCell(0).apply { setCellValue(answerPattern); cellStyle = dataStyle }
+            row.createCell(1).apply { setCellValue(worksCount.toDouble()); cellStyle = dataStyle }
+            row.createCell(2).apply { setCellValue(String.format("%.1f%%", percentage)); cellStyle = dataStyle }
+            row.createCell(3).apply { setCellValue(workNames.joinToString(", ")); cellStyle = dataStyle }
+        }
+        
         // Устанавливаем фиксированную ширину столбцов
         sheet.setColumnWidth(0, 1500) // Вопрос
         sheet.setColumnWidth(1, 2000) // Правильно
         sheet.setColumnWidth(2, 2000) // Всего
         sheet.setColumnWidth(3, 3000) // Процент успешности
         sheet.setColumnWidth(4, 4000) // Статус - шире
+        
+        // Ширина столбцов для связанных ошибок и идентичных работ
+        sheet.setColumnWidth(0, 2000) // Вопрос 1 / Паттерн
+        sheet.setColumnWidth(1, 2000) // Вопрос 2 / Количество
+        sheet.setColumnWidth(2, 2000) // Оба ошибочны / Процент
+        sheet.setColumnWidth(3, 3000) // Процент работ / Номера работ
     }
     
     private fun createChartsSheet(workbook: Workbook, reportsManager: ReportsManager, headerStyle: CellStyle, dataStyle: CellStyle, titleStyle: CellStyle) {

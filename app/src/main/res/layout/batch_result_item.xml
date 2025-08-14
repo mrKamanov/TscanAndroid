@@ -5,91 +5,143 @@
     android:layout_height="wrap_content"
     android:layout_marginBottom="8dp"
     app:cardBackgroundColor="@color/card_background"
-    app:cardCornerRadius="8dp"
-    app:cardElevation="2dp">
+    app:cardCornerRadius="12dp"
+    app:cardElevation="3dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="12dp">
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:gravity="start">
 
-        <!-- Превью изображения -->
-        <ImageView
-            android:id="@+id/iv_preview"
-            android:layout_width="80dp"
-            android:layout_height="80dp"
-            android:scaleType="centerCrop"
-            android:background="@drawable/edit_text_background"
-            android:layout_marginEnd="12dp" />
-
-        <!-- Информация о результате -->
+        <!-- ВЕРХНЯЯ ЧАСТЬ: Текстовые элементы -->
         <LinearLayout
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center_vertical">
+            android:orientation="horizontal"
+            android:gravity="start|center_vertical"
+            android:layout_marginBottom="12dp">
 
-            <TextView
-                android:id="@+id/tv_filename"
-                android:layout_width="wrap_content"
+            <!-- Левая часть: номер работы + имя файла + результат + статус -->
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="test_image.jpg"
-                android:textColor="@color/text_inverse"
-                android:textStyle="bold"
-                android:layout_marginBottom="4dp" />
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="start">
 
-            <TextView
-                android:id="@+id/tv_score"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="4/5 (80%)"
-                android:textColor="@color/success_green"
-                android:layout_marginBottom="4dp" />
+                <!-- Первая строка: номер работы + оценка -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="start|center_vertical"
+                    android:layout_marginBottom="6dp">
 
-            <TextView
-                android:id="@+id/tv_grade"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Оценка: 4"
-                android:textColor="@color/primary_blue"
-                android:layout_marginBottom="4dp" />
+                    <TextView
+                        android:id="@+id/tv_filename"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Работа 11"
+                        android:textColor="#CBD5E1"
+                        android:textStyle="bold"
+                        android:textSize="16sp"
+                        android:fontFamily="@font/krabuler"
+                        android:gravity="start" />
 
-            <TextView
-                android:id="@+id/tv_errors"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Ошибки: Вопрос 2"
-                android:textColor="@color/text_secondary"
-                android:textSize="12sp" />
+                    <TextView
+                        android:id="@+id/tv_grade"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Оценка: 5"
+                        android:textColor="@color/primary_blue"
+                        android:textStyle="bold"
+                        android:textSize="14sp"
+                        android:fontFamily="@font/krabuler"
+                        android:background="@drawable/edit_text_background"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:paddingTop="2dp"
+                        android:paddingBottom="2dp" />
+                </LinearLayout>
+
+                <!-- Вторая строка: имя файла -->
+                <TextView
+                    android:id="@+id/tv_filename_subtitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="IMG_20241201_143022.jpg"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp"
+                    android:fontFamily="@font/krabuler"
+                    android:layout_marginBottom="6dp"
+                    android:maxLines="2"
+                    android:ellipsize="end"
+                    android:gravity="start" />
+
+                <!-- Третья строка: результат + процент -->
+                <TextView
+                    android:id="@+id/tv_score"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="10/10 (100%)"
+                    android:textColor="@color/success_green"
+                    android:textStyle="bold"
+                    android:textSize="14sp"
+                    android:fontFamily="@font/krabuler"
+                    android:layout_marginBottom="6dp"
+                    android:gravity="start" />
+
+                <!-- Четвертая строка: краткий статус -->
+                <TextView
+                    android:id="@+id/tv_errors"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Обнаружены исправления"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp"
+                    android:fontFamily="@font/krabuler"
+                    android:maxLines="2"
+                    android:ellipsize="end"
+                    android:gravity="start" />
+            </LinearLayout>
+
+            <!-- Правая часть: кнопка Подробнее -->
         </LinearLayout>
 
-        <!-- ========== КНОПКА В ЕДИНОМ ОВАЛЬНОМ СТИЛЕ (ИСПРАВЛЕННАЯ) ========== -->
-        <!-- Кнопка Подробнее (серая овальная компактная) -->
+        <!-- НИЖНЯЯ ЧАСТЬ: Превью изображения -->
+        <ImageView
+            android:id="@+id/iv_preview"
+            android:layout_width="131dp"
+            android:layout_height="126dp"
+            android:adjustViewBounds="true"
+            android:background="@drawable/edit_text_background"
+            android:scaleType="centerCrop" />
+
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_details"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:layout_width="wrap_content"
             android:layout_height="36dp"
-            android:text="Подробнее"
-            android:textColor="#CBD5E1"
-            android:textStyle="bold"
-            android:textSize="12sp"
-            android:fontFamily="@font/krabuler"
+            android:layout_gravity="top"
             android:backgroundTint="#1E293B"
-            app:cornerRadius="18dp"
-            app:strokeColor="#475569"
-            app:strokeWidth="1dp"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:layout_gravity="center_vertical"
+            android:contentDescription="Показать подробности результата"
             android:elevation="0dp"
-            android:stateListAnimator="@null"
-            app:iconPadding="0dp"
+            android:fontFamily="@font/krabuler"
             android:minWidth="0dp"
             android:minHeight="0dp"
-            android:layout_marginStart="8dp"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-            android:contentDescription="Показать подробности результата" />
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:stateListAnimator="@null"
+            android:text="Подробнее"
+            android:textColor="#CBD5E1"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            app:cornerRadius="18dp"
+            app:strokeColor="#475569"
+            app:strokeWidth="1dp" />
+
     </LinearLayout>
 </androidx.cardview.widget.CardView>

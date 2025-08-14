@@ -10,21 +10,45 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Фотография бланка"
+        android:text="Добавить фотографию"
         android:textSize="20sp"
         android:textStyle="bold"
-        android:textColor="@color/text_inverse"
+        android:textColor="#CBD5E1"
         android:fontFamily="@font/krabuler"
         android:layout_marginBottom="16dp" />
 
     <TextView
-        android:id="@+id/tv_work_number"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Работа 1"
+        android:text="Номер работы:"
         android:textSize="16sp"
-        android:textColor="@color/text_secondary"
-        android:layout_marginBottom="12dp" />
+        android:textColor="#CBD5E1"
+        android:fontFamily="@font/krabuler"
+        android:layout_marginBottom="8dp" />
+
+    <EditText
+        android:id="@+id/et_work_number"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Введите номер работы"
+        android:inputType="number"
+        android:textSize="16sp"
+        android:textColor="@color/text_inverse"
+        android:fontFamily="@font/krabuler"
+        android:background="@drawable/edit_text_background"
+        android:padding="12dp"
+        android:layout_marginBottom="8dp" />
+
+    <TextView
+        android:id="@+id/tv_work_number_error"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textSize="14sp"
+        android:textColor="@color/error"
+        android:fontFamily="@font/krabuler"
+        android:layout_marginBottom="12dp"
+        android:visibility="gone" />
 
     <ImageView
         android:id="@+id/iv_photo"
@@ -76,7 +100,7 @@
             android:layout_height="48dp"
             android:layout_weight="1"
             android:text="ДОБАВИТЬ"
-            android:textColor="#FFFFFF"
+            android:textColor="#CBD5E1"
             android:textStyle="bold"
             android:textSize="12sp"
             android:fontFamily="@font/krabuler"
@@ -96,18 +120,18 @@
             style="@style/Widget.MaterialComponents.Button"
             android:contentDescription="Добавить фотографию в отчет" />
 
-        <!-- Кнопка Завершить (красная овальная) -->
+        <!-- Кнопка Следующая работа (синяя овальная) -->
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_finish_camera"
+            android:id="@+id/btn_next_photo"
             android:layout_width="0dp"
             android:layout_height="48dp"
             android:layout_weight="1"
-            android:text="ЗАВЕРШИТЬ"
-            android:textColor="#FFFFFF"
+            android:text="СЛЕДУЮЩАЯ"
+            android:textColor="#CBD5E1"
             android:textStyle="bold"
             android:textSize="12sp"
             android:fontFamily="@font/krabuler"
-            android:backgroundTint="#DC2626"
+            android:backgroundTint="#3B82F6"
             app:cornerRadius="24dp"
             app:strokeColor="#475569"
             app:strokeWidth="1dp"
@@ -120,7 +144,7 @@
             android:minWidth="0dp"
             android:minHeight="0dp"
             style="@style/Widget.MaterialComponents.Button"
-            android:contentDescription="Завершить фотографирование" />
+            android:contentDescription="Добавить и сделать следующее фото" />
     </LinearLayout>
 
 </LinearLayout>

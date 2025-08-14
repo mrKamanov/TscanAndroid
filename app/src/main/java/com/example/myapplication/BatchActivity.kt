@@ -7,12 +7,15 @@ import android.content.pm.PackageManager
 import android.util.Log
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Color
+import android.content.res.ColorStateList
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.*
+import com.google.android.material.button.MaterialButton
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -27,10 +30,14 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.batch.BatchCriteria
 import com.example.myapplication.batch.BatchCriteriaManager
 import com.example.myapplication.ml.OMRModelManager
+import com.example.myapplication.ml.FixedAnswerCallback
 import com.example.myapplication.models.BatchResult
 import com.example.myapplication.models.OMRResult
-import com.example.myapplication.processing.ImageProcessor
+import com.example.myapplication.models.FixedAnswer
+import com.example.myapplication.batch.BatchImageProcessor
+import com.example.myapplication.batch.BatchFixedAnswerProcessor
 import com.example.myapplication.reports.ReportsManager
+import com.example.myapplication.utils.SettingsHelper
 import org.opencv.android.OpenCVLoader
 import java.io.File
 import java.text.SimpleDateFormat
@@ -38,7 +45,7 @@ import java.util.*
 import android.os.Environment
 import androidx.core.content.FileProvider
 
-class BatchActivity : AppCompatActivity() {
+class BatchActivity : AppCompatActivity(), FixedAnswerCallback {
     private lateinit var etQuestions: EditText
     private lateinit var etChoices: EditText
     private lateinit var layoutCorrectAnswers: LinearLayout
@@ -73,16 +80,65 @@ class BatchActivity : AppCompatActivity() {
     private var currentWorkNumber = 1
     private var photoUri: Uri? = null
     private val photoWorkNames = mutableMapOf<Uri, String>() // Связываем URI с именами работ
+    private var workCounter = 0 // Счетчик для нумерации работ по порядку загрузки
+    
+    // Отслеживание занятых номеров работ
+    private val usedWorkNumbers = mutableSetOf<Int>()
+    private var nextAvailableWorkNumber = 1
+    
+    // Отслеживание всех обработанных файлов (по именам)
+    private val processedFileNames = mutableSetOf<String>()
+    
+    // Обработчик исправлений для пакетной обработки
+    private lateinit var fixedAnswerProcessor: BatchFixedAnswerProcessor
+    
+    // Переменные для обработки исправлений (устаревшие - используем fixedAnswerProcessor)
+    private val pendingFixedAnswers = mutableMapOf<String, MutableList<FixedAnswer>>() // filename -> список исправлений
+    private val fixedAnswerDecisions = mutableMapOf<String, MutableMap<Int, Boolean>>() // filename -> question -> считать ошибкой
     
     private val selectImagesLauncher = registerForActivityResult(
         ActivityResultContracts.GetMultipleContents()
     ) { uris ->
         uris?.let { uriList ->
             if (uriList.isNotEmpty()) {
-                selectedImages.clear() // Очищаем предыдущий выбор
-                selectedImages.addAll(uriList)
+                // Проверяем на дубликаты по имени файла
+                val newUris = uriList.filter { uri ->
+                    val fileName = getFileNameFromUri(uri)
+                    // Проверяем, нет ли уже файла с таким именем в текущей сессии
+                    val notInCurrentSession = !selectedImages.any { existingUri ->
+                        getFileNameFromUri(existingUri) == fileName
+                    }
+                    // И проверяем, не был ли файл уже обработан ранее
+                    val notProcessedBefore = !processedFileNames.contains(fileName)
+                    
+                    notInCurrentSession && notProcessedBefore
+                }
+                
+                if (newUris.isEmpty()) {
+                    Toast.makeText(this, "Все файлы уже загружены", Toast.LENGTH_SHORT).show()
+                    return@let
+                }
+                
+                // Добавляем только новые файлы
+                newUris.forEach { uri ->
+                    selectedImages.add(uri)
+                    
+                    // Генерируем уникальное имя для файла
+                    val fileName = getFileNameFromUri(uri)
+                    val workName = "Файл: $fileName"
+                    photoWorkNames[uri] = workName
+                }
+                
                 updateSelectedCount()
                 updateProcessButton()
+                
+                val skippedCount = uriList.size - newUris.size
+                val message = if (skippedCount > 0) {
+                    "Загружено ${newUris.size} новых файлов, ${skippedCount} уже загружены или обработаны ранее"
+                } else {
+                    "Загружено ${newUris.size} файлов"
+                }
+                Toast.makeText(this, message, Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -94,9 +150,9 @@ class BatchActivity : AppCompatActivity() {
             photoUri?.let { uri ->
                 showPhotoDialog(uri)
             }
-        } else {
-            Toast.makeText(this, "Ошибка при фотографировании", Toast.LENGTH_SHORT).show()
         }
+        // Убираем уведомление об ошибке при отмене фотографирования
+        // Пользователь сам отменил через крестик - это нормально
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -149,6 +205,9 @@ class BatchActivity : AppCompatActivity() {
         omrModelManager = OMRModelManager(this)
         OMRModelManager.setGlobalInstance(omrModelManager)
         
+        // Инициализируем обработчик исправлений для пакетной обработки
+        fixedAnswerProcessor = BatchFixedAnswerProcessor(this)
+        
         // Проверка готовности ML модели
         Thread {
             try {
@@ -164,7 +223,7 @@ class BatchActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerView() {
-        batchResultsAdapter = BatchResultsAdapter(mutableListOf()) { result ->
+        batchResultsAdapter = BatchResultsAdapter(mutableListOf(), fixedAnswerProcessor) { result ->
             showResultDetails(result)
         }
         rvResults.layoutManager = LinearLayoutManager(this)
@@ -189,7 +248,7 @@ class BatchActivity : AppCompatActivity() {
         }
 
         btnReset.setOnClickListener {
-            resetAll()
+            showSmartResetDialog()
         }
 
         btnSaveCriteria.setOnClickListener {
@@ -545,8 +604,27 @@ class BatchActivity : AppCompatActivity() {
                     try {
                         val bitmap = getBitmapFromUri(uri)
                         if (bitmap != null) {
-                            val result = processImage(bitmap, correctAnswers, getFileName(uri))
+                            // Получаем номер работы из photoWorkNames
+                            val workName = photoWorkNames[uri]
+                            val workNumber = if (workName != null && workName.matches(Regex("\\d+"))) {
+                                // Для фотографий используем сохраненный номер
+                                workName.toInt()
+                            } else {
+                                // Для файлов из галереи используем следующий доступный номер
+                                getNextAvailableWorkNumber()
+                            }
+                            
+                            // Добавляем номер в использованные (если еще не добавлен)
+                            if (!usedWorkNumbers.contains(workNumber)) {
+                                usedWorkNumbers.add(workNumber)
+                                updateNextAvailableWorkNumber()
+                            }
+                            
+                            val result = processImage(bitmap, correctAnswers, getFileNameFromUri(uri), workNumber)
                             processedCount++
+                            
+                            // Добавляем имя файла в список обработанных
+                            processedFileNames.add(getFileNameFromUri(uri))
                             
                             runOnUiThread {
                                 Log.d("BatchActivity", "📝 Добавляем результат: ${result.filename}, правильных: ${result.correctCount}/${result.totalQuestions}")
@@ -574,6 +652,7 @@ class BatchActivity : AppCompatActivity() {
                                 val errorResult = BatchResult(
                                     id = UUID.randomUUID().toString(),
                                     filename = getFileName(uri),
+                                    workNumber = ++workCounter, // Увеличиваем счетчик и присваиваем номер
                                     originalImage = null,
                                     processedImage = null,
                                     correctCount = 0,
@@ -582,7 +661,8 @@ class BatchActivity : AppCompatActivity() {
                                     grade = 0,
                                     errors = listOf(BatchResult.ErrorDetail(1, 0, 1)),
                                     correctAnswers = correctAnswers,
-                                    selectedAnswers = List(currentQuestions) { 0 }
+                                    selectedAnswers = List(currentQuestions) { 0 },
+                                    isAddedToReport = false // По умолчанию не добавлена в отчет
                                 )
                                 
                                 Log.d("BatchActivity", "❌ Ошибка загрузки изображения: ${getFileName(uri)}")
@@ -605,7 +685,17 @@ class BatchActivity : AppCompatActivity() {
                     btnProcess.isEnabled = true
                     btnProcess.text = "Начать обработку"
                     btnAddAllToReport.isEnabled = true
-                    Toast.makeText(this, "Обработка завершена", Toast.LENGTH_SHORT).show()
+                    
+                    // Автоматически сбрасываем загруженные работы после успешной обработки
+                    // чтобы избежать их повторной проверки
+                    // НО сохраняем usedWorkNumbers и nextAvailableWorkNumber
+                    // чтобы избежать дубликатов при повторной загрузке тех же файлов
+                    selectedImages.clear()
+                    photoWorkNames.clear()
+                    updateSelectedCount()
+                    updateProcessButton()
+                    
+                    Toast.makeText(this, "Обработка завершена. Загруженные работы сброшены", Toast.LENGTH_LONG).show()
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -613,26 +703,31 @@ class BatchActivity : AppCompatActivity() {
                     hideProgressBar()
                     btnProcess.isEnabled = true
                     btnProcess.text = "Начать обработку"
-                    Toast.makeText(this, "Критическая ошибка: ${e.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this, "Критическая ошибка: ${e.message}. Загруженные работы сохранены", Toast.LENGTH_LONG).show()
                 }
             }
         }.start()
     }
 
-    private fun processImage(bitmap: Bitmap, correctAnswers: List<Int>, filename: String): BatchResult {
+    private fun processImage(bitmap: Bitmap, correctAnswers: List<Int>, filename: String, workNumber: Int): BatchResult {
         try {
-            // Используем ImageProcessor для обработки изображения
-            val imageProcessor = ImageProcessor()
+            // Используем BatchImageProcessor для обработки изображения
+            val batchImageProcessor = BatchImageProcessor()
             
             // Устанавливаем ML модель
-            imageProcessor.setMLModel(omrModelManager)
+            batchImageProcessor.setMLModel(omrModelManager)
+            
+            // Создаем callback для обработки исправлений через fixedAnswerProcessor
+            val tempCallback = fixedAnswerProcessor.createFixedAnswerCallback(filename)
             
             // Используем ML для получения результатов (с OpenCV для поиска контуров)
-            val omrResult = imageProcessor.processFrameWithML(
+            val omrResult = batchImageProcessor.processFrameWithML(
                 bitmap,
                 currentQuestions,
                 currentChoices,
-                correctAnswers
+                correctAnswers,
+                null, // onProgressUpdate
+                tempCallback // FixedAnswerCallback для этого файла
             )
             
             if (omrResult != null) {
@@ -667,6 +762,7 @@ class BatchActivity : AppCompatActivity() {
                 return BatchResult(
                     id = UUID.randomUUID().toString(),
                     filename = filename,
+                    workNumber = workNumber, // Используем переданный номер работы
                     originalImage = bitmap,
                     processedImage = bitmap, // Используем оригинальное изображение
                     correctCount = correctCount,
@@ -677,7 +773,9 @@ class BatchActivity : AppCompatActivity() {
                     correctAnswers = correctAnswers,
                     selectedAnswers = detectedAnswers.toList(),
                     contourVisualization = omrResult.visualization,
-                    gridVisualization = omrResult.gridVisualization
+                    gridVisualization = omrResult.gridVisualization,
+                    fixedAnswers = omrResult.fixedAnswers, // Добавляем исправления
+                    isAddedToReport = false // По умолчанию не добавлена в отчет
                 )
             } else {
                 // Если ML не сработал (контур не найден), возвращаем результат с ошибкой
@@ -685,6 +783,7 @@ class BatchActivity : AppCompatActivity() {
                 return BatchResult(
                     id = UUID.randomUUID().toString(),
                     filename = filename,
+                    workNumber = workNumber, // Используем переданный номер работы
                     originalImage = bitmap,
                     processedImage = null,
                     correctCount = 0,
@@ -693,7 +792,8 @@ class BatchActivity : AppCompatActivity() {
                     grade = 0, // Специальная оценка для ошибки
                     errors = listOf(BatchResult.ErrorDetail(1, 0, correctAnswers.firstOrNull() ?: 1)),
                     correctAnswers = correctAnswers,
-                    selectedAnswers = List(currentQuestions) { 0 }
+                    selectedAnswers = List(currentQuestions) { 0 },
+                    isAddedToReport = false // По умолчанию не добавлена в отчет
                 )
             }
         } catch (e: Exception) {
@@ -701,16 +801,18 @@ class BatchActivity : AppCompatActivity() {
             // Возвращаем результат с ошибкой
             return BatchResult(
                 id = UUID.randomUUID().toString(),
-                filename = filename,
+                filename = UUID.randomUUID().toString(),
+                workNumber = workNumber, // Используем переданный номер работы
                 originalImage = bitmap,
                 processedImage = null,
                 correctCount = 0,
                 totalQuestions = currentQuestions,
                 percentage = 0.0,
                 grade = 2,
-                errors = listOf(BatchResult.ErrorDetail(1, 0, correctAnswers.firstOrNull() ?: 1)),
+                errors = listOf(BatchResult.ErrorDetail(1, 0, correctAnswers.firstOrNull() ?: 0)),
                 correctAnswers = correctAnswers,
-                selectedAnswers = List(currentQuestions) { 0 }
+                selectedAnswers = List(currentQuestions) { 0 },
+                isAddedToReport = false // По умолчанию не добавлена в отчет
             )
         }
     }
@@ -747,6 +849,9 @@ class BatchActivity : AppCompatActivity() {
             .setView(dialogView)
             .create()
 
+        // Убираем белые углы
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+
         // Настраиваем элементы диалога
         val ivResultImage = dialogView.findViewById<ImageView>(R.id.iv_result_image)
         val tvImageCaption = dialogView.findViewById<TextView>(R.id.tv_image_caption)
@@ -756,7 +861,11 @@ class BatchActivity : AppCompatActivity() {
         val tvGrade = dialogView.findViewById<TextView>(R.id.tv_grade)
         val layoutErrorDetails = dialogView.findViewById<LinearLayout>(R.id.layout_error_details)
         val btnClose = dialogView.findViewById<ImageView>(R.id.btn_close)
-        val btnAddToReport = dialogView.findViewById<Button>(R.id.btn_add_to_report)
+        val btnAddToReport = dialogView.findViewById<MaterialButton>(R.id.btn_add_to_report)
+        
+        // Элементы для исправлений
+        val cardFixedAnswers = dialogView.findViewById<androidx.cardview.widget.CardView>(R.id.card_fixed_answers)
+        val layoutFixedAnswers = dialogView.findViewById<LinearLayout>(R.id.layout_fixed_answers)
 
         // Устанавливаем данные - показываем визуализацию контура и сетки
         when {
@@ -790,11 +899,13 @@ class BatchActivity : AppCompatActivity() {
             tvTotalQuestions.text = "Всего: ${result.totalQuestions}"
             tvPercentage.text = "Процент: 0.0%"
             tvGrade.text = "Оценка: -"
+            tvGrade.setTextColor(getColor(android.R.color.darker_gray))
         } else {
             tvCorrectCount.text = "Правильно: ${result.correctCount}"
             tvTotalQuestions.text = "Всего: ${result.totalQuestions}"
             tvPercentage.text = "Процент: ${String.format("%.1f", result.percentage)}%"
             tvGrade.text = "Оценка: ${result.grade}"
+            tvGrade.setTextColor(getGradeColor(result.grade))
         }
 
         // Показываем детали ошибок
@@ -869,9 +980,190 @@ class BatchActivity : AppCompatActivity() {
                 layoutErrorDetails.addView(errorCard)
             }
         }
+        
+        // Показываем исправления, если они есть
+        val fixedAnswers = fixedAnswerProcessor.getFixedAnswers(result.filename)
+        if (fixedAnswers.isNotEmpty()) {
+            cardFixedAnswers.visibility = View.VISIBLE
+            layoutFixedAnswers.removeAllViews()
+            
+                            // Создаем ссылку на диалог для обновления UI
+                val currentDialog = dialog
+                
+                fixedAnswers.forEach { fixedAnswer ->
+                    // Проверяем, было ли уже принято решение
+                    val existingDecision = fixedAnswerProcessor.getFixedAnswerDecision(result.filename, fixedAnswer.questionNumber)
+                val fixedAnswerCard = LinearLayout(this).apply {
+                    orientation = LinearLayout.VERTICAL
+                    background = ContextCompat.getDrawable(this@BatchActivity, R.drawable.edit_text_background)
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    ).apply {
+                        setMargins(0, 8, 0, 8)
+                    }
+                    setPadding(16, 12, 16, 12)
+                }
+                
+                // Заголовок исправления
+                val headerLayout = LinearLayout(this).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    gravity = android.view.Gravity.CENTER_VERTICAL
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    ).apply {
+                        setMargins(0, 0, 0, 8)
+                    }
+                }
+                
+                val warningIcon = TextView(this).apply {
+                    text = "⚠️"
+                    textSize = 16f
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    ).apply {
+                        setMargins(0, 0, 8, 0)
+                    }
+                }
+                
+                val fixedAnswerText = TextView(this).apply {
+                    text = "Вопрос ${fixedAnswer.questionNumber}, вариант ${fixedAnswer.choiceNumber}"
+                    setTextColor(ContextCompat.getColor(this@BatchActivity, R.color.text_secondary))
+                    textSize = 14f
+                    typeface = ResourcesCompat.getFont(this@BatchActivity, R.font.krabuler)
+                    setTypeface(null, android.graphics.Typeface.BOLD)
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    )
+                }
+                
+                headerLayout.addView(warningIcon)
+                headerLayout.addView(fixedAnswerText)
+                
+                // Кнопки ДА/НЕТ
+                val buttonsLayout = LinearLayout(this).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    ).apply {
+                        setMargins(0, 8, 0, 0)
+                    }
+                }
+                
+                lateinit var btnYes: MaterialButton
+                lateinit var btnNo: MaterialButton
+                
+                btnYes = MaterialButton(this).apply {
+                    // Если решение уже принято, показываем его
+                    if (existingDecision == true) {
+                        text = "Ошибка"
+                        isEnabled = false
+                        backgroundTintList = android.content.res.ColorStateList.valueOf(ContextCompat.getColor(this@BatchActivity, R.color.error))
+                    } else {
+                        text = "ДА"
+                        isEnabled = true
+                        backgroundTintList = android.content.res.ColorStateList.valueOf(ContextCompat.getColor(this@BatchActivity, R.color.error))
+                    }
+                    
+                    setTextColor(ContextCompat.getColor(this@BatchActivity, R.color.text_secondary))
+                    layoutParams = LinearLayout.LayoutParams(
+                        0,
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        1f
+                    ).apply {
+                        setMargins(0, 0, 8, 0)
+                    }
+                    cornerRadius = 28
+                    minHeight = 44
+                    maxHeight = 44
+                    setTypeface(null, android.graphics.Typeface.BOLD)
+                    textSize = 13f
+                    isAllCaps = false
+                    setOnClickListener {
+                        // Проверяем, не было ли уже принято решение
+                        if (existingDecision != null) {
+                            Toast.makeText(this@BatchActivity, "Решение уже принято для этого исправления", Toast.LENGTH_SHORT).show()
+                            return@setOnClickListener
+                        }
+                        
+                        // Логика для "ДА" - считаем исправление ошибкой
+                        handleFixedAnswerDecision(result, fixedAnswer, true, currentDialog)
+                        
+                        // Обновляем UI кнопки
+                        btnYes.isEnabled = false
+                        btnYes.text = "Ошибка"
+                        btnYes.backgroundTintList = android.content.res.ColorStateList.valueOf(ContextCompat.getColor(this@BatchActivity, R.color.error))
+                        btnNo.isEnabled = false
+                        btnNo.text = "Отменено"
+                        btnNo.backgroundTintList = android.content.res.ColorStateList.valueOf(ContextCompat.getColor(this@BatchActivity, R.color.text_secondary))
+                    }
+                }
+                
+                btnNo = MaterialButton(this).apply {
+                    // Если решение уже принято, показываем его
+                    if (existingDecision == false) {
+                        text = "Правильно"
+                        isEnabled = false
+                        backgroundTintList = android.content.res.ColorStateList.valueOf(ContextCompat.getColor(this@BatchActivity, R.color.success_green))
+                    } else {
+                        text = "НЕТ"
+                        isEnabled = true
+                        backgroundTintList = android.content.res.ColorStateList.valueOf(ContextCompat.getColor(this@BatchActivity, R.color.success_green))
+                    }
+                    
+                    setTextColor(ContextCompat.getColor(this@BatchActivity, R.color.text_secondary))
+                    layoutParams = LinearLayout.LayoutParams(
+                        0,
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        1f
+                    ).apply {
+                        setMargins(8, 0, 0, 0)
+                    }
+                    cornerRadius = 28
+                    minHeight = 44
+                    maxHeight = 44
+                    setTypeface(null, android.graphics.Typeface.BOLD)
+                    textSize = 13f
+                    isAllCaps = false
+                    setOnClickListener {
+                        // Проверяем, не было ли уже принято решение
+                        if (existingDecision != null) {
+                            Toast.makeText(this@BatchActivity, "Решение уже принято для этого исправления", Toast.LENGTH_SHORT).show()
+                            return@setOnClickListener
+                        }
+                        
+                        // Логика для "НЕТ" - оставляем исправление правильным
+                        handleFixedAnswerDecision(result, fixedAnswer, false, currentDialog)
+                        
+                        // Обновляем UI кнопки
+                        btnNo.isEnabled = false
+                        btnNo.text = "Правильно"
+                        btnNo.backgroundTintList = android.content.res.ColorStateList.valueOf(ContextCompat.getColor(this@BatchActivity, R.color.success_green))
+                        btnYes.isEnabled = false
+                        btnYes.text = "Отменено"
+                        btnYes.backgroundTintList = android.content.res.ColorStateList.valueOf(ContextCompat.getColor(this@BatchActivity, R.color.text_secondary))
+                    }
+                }
+                
+                buttonsLayout.addView(btnYes)
+                buttonsLayout.addView(btnNo)
+                
+                fixedAnswerCard.addView(headerLayout)
+                fixedAnswerCard.addView(buttonsLayout)
+                layoutFixedAnswers.addView(fixedAnswerCard)
+            }
+        } else {
+            cardFixedAnswers.visibility = View.GONE
+        }
 
         // Обработчики кнопок
         btnClose.setOnClickListener {
+            // Перед закрытием обновляем все результаты с учетом исправлений
+            updateAllResultsWithFixedAnswers()
             dialog.dismiss()
         }
 
@@ -891,6 +1183,14 @@ class BatchActivity : AppCompatActivity() {
                 }
             )
             reportsManager.addReport(omrResult, "Пакетная обработка: ${result.filename}")
+            
+            // Устанавливаем флаг добавления в отчет
+            val updatedResult = result.copy(isAddedToReport = true)
+            val resultIndex = batchResultsAdapter.getResults().indexOfFirst { it.id == result.id }
+            if (resultIndex != -1) {
+                batchResultsAdapter.updateResult(resultIndex, updatedResult)
+            }
+            
             Toast.makeText(this, "Добавлено в отчет", Toast.LENGTH_SHORT).show()
             btnAddToReport.isEnabled = false
             btnAddToReport.text = "Добавлено"
@@ -898,9 +1198,165 @@ class BatchActivity : AppCompatActivity() {
 
 
 
-        dialog.show()
+                dialog.show()
     }
-
+    
+    /**
+     * Обрабатывает решение пользователя по исправлению
+     */
+    private fun handleFixedAnswerDecision(result: BatchResult, fixedAnswer: FixedAnswer, countAsError: Boolean, dialog: AlertDialog) {
+        Log.d("BatchActivity", "🔍 Обработка решения по исправлению: вопрос ${fixedAnswer.questionNumber}, считать ошибкой: $countAsError")
+        
+        // Сохраняем решение пользователя через fixedAnswerProcessor
+        fixedAnswerProcessor.handleFixedAnswerDecision(result.filename, fixedAnswer.questionNumber, countAsError)
+        
+        // Обновляем результат с учетом всех предыдущих изменений
+        updateBatchResultAfterFixedAnswer(result, fixedAnswer, countAsError, dialog)
+        
+        // Обновляем UI в реальном времени
+        updateResultUI(result, dialog)
+    }
+    
+    /**
+     * Обновляет BatchResult после принятия решения по исправлению
+     * Учитывает ВСЕ предыдущие изменения для корректного расчета
+     */
+    private fun updateBatchResultAfterFixedAnswer(
+        result: BatchResult, 
+        fixedAnswer: FixedAnswer, 
+        countAsError: Boolean, 
+        dialog: AlertDialog
+    ) {
+        // Находим результат в адаптере
+        val results = batchResultsAdapter.getResults()
+        val resultIndex = results.indexOfFirst { it.id == result.id }
+        
+        if (resultIndex != -1) {
+            // Получаем актуальный результат (с предыдущими изменениями)
+            val currentResult = results[resultIndex]
+            
+            // Получаем ВСЕ исправления для этого файла
+            val allFixedAnswers = fixedAnswerProcessor.getFixedAnswers(result.filename)
+            
+            // Создаем новый список ошибок на основе оригинальных ошибок
+            val updatedErrors = currentResult.errors.toMutableList()
+            
+            // Обрабатываем каждое исправление
+            allFixedAnswers.forEach { fa ->
+                val decision = fixedAnswerProcessor.getFixedAnswerDecision(result.filename, fa.questionNumber)
+                
+                if (decision == true) {
+                    // Если исправление считается ошибкой
+                    val questionIndex = fa.questionNumber - 1
+                    val correctAnswer = currentResult.correctAnswers.getOrNull(questionIndex) ?: 0
+                    
+                    // Проверяем, нет ли уже такой ошибки
+                    val existingError = updatedErrors.find { it.questionNumber == fa.questionNumber }
+                    if (existingError == null) {
+                        val newError = BatchResult.ErrorDetail(
+                            questionNumber = fa.questionNumber,
+                            selectedAnswer = fa.choiceNumber,
+                            correctAnswer = correctAnswer + 1
+                        )
+                        updatedErrors.add(newError)
+                    }
+                }
+            }
+            
+            // Пересчитываем статистику на основе ВСЕХ ошибок
+            val newCorrectCount = currentResult.totalQuestions - updatedErrors.size
+            val newPercentage = (newCorrectCount.toDouble() / currentResult.totalQuestions) * 100
+            val newGrade = calculateGradeForBatch(newPercentage.toInt(), currentResult.totalQuestions)
+            
+            val updatedResult = currentResult.copy(
+                correctCount = newCorrectCount,
+                percentage = newPercentage,
+                grade = newGrade,
+                errors = updatedErrors,
+                workNumber = currentResult.workNumber,
+                isAddedToReport = currentResult.isAddedToReport
+            )
+            
+            // Обновляем результат в адаптере
+            batchResultsAdapter.updateResult(resultIndex, updatedResult)
+            
+            Log.d("BatchActivity", "✅ Результат обновлен с учетом ВСЕХ исправлений: ${updatedResult.correctCount}/${updatedResult.totalQuestions} = ${String.format("%.1f", updatedResult.percentage)}%, оценка: ${updatedResult.grade}")
+            Log.d("BatchActivity", "📊 Обработано исправлений: ${allFixedAnswers.size}, ошибок: ${updatedErrors.size}")
+        }
+    }
+    
+    /**
+     * Обновляет UI результата в реальном времени
+     */
+    private fun updateResultUI(result: BatchResult, dialog: AlertDialog) {
+        // Обновляем статистику в диалоге
+        val results = batchResultsAdapter.getResults()
+        val resultIndex = results.indexOfFirst { it.id == result.id }
+        
+        if (resultIndex != -1) {
+            val updatedResult = results[resultIndex]
+            
+            // Обновляем элементы UI в диалоге
+            updateDialogUI(updatedResult, dialog)
+            
+            // Обновляем превью в списке результатов
+            batchResultsAdapter.notifyItemChanged(resultIndex)
+        }
+    }
+    
+    /**
+     * Обновляет элементы UI в диалоге
+     */
+    private fun updateDialogUI(updatedResult: BatchResult, dialog: AlertDialog) {
+        try {
+            // Обновляем статистику в диалоге
+            val tvCorrectCount = dialog.findViewById<TextView>(R.id.tv_correct_count)
+            val tvPercentage = dialog.findViewById<TextView>(R.id.tv_percentage)
+            val tvGrade = dialog.findViewById<TextView>(R.id.tv_grade)
+            
+            if (tvCorrectCount != null) {
+                tvCorrectCount.text = "Правильно: ${updatedResult.correctCount}"
+            }
+            
+            if (tvPercentage != null) {
+                tvPercentage.text = "Процент: ${String.format("%.1f", updatedResult.percentage)}%"
+            }
+            
+            if (tvGrade != null) {
+                tvGrade.text = "Оценка: ${updatedResult.grade}"
+                if (updatedResult.grade == 0) {
+                    tvGrade.setTextColor(getColor(android.R.color.darker_gray))
+                } else {
+                    tvGrade.setTextColor(getGradeColor(updatedResult.grade))
+                }
+            }
+            
+            Log.d("BatchActivity", "🔄 UI диалога обновлен: ${updatedResult.correctCount}/${updatedResult.totalQuestions} = ${String.format("%.1f", updatedResult.percentage)}%, оценка: ${updatedResult.grade}")
+        } catch (e: Exception) {
+            Log.e("BatchActivity", "❌ Ошибка обновления UI диалога: ${e.message}")
+        }
+    }
+    
+    /**
+     * Обновляет все результаты с учетом исправлений
+     */
+    private fun updateAllResultsWithFixedAnswers() {
+        val results = batchResultsAdapter.getResults()
+        results.forEach { result ->
+            // Проверяем, есть ли исправления для этого результата
+            if (fixedAnswerProcessor.hasFixedAnswers(result.filename)) {
+                // Обновляем результат с учетом всех исправлений
+                // Создаем временный диалог для передачи в метод
+                val tempDialog = AlertDialog.Builder(this).create()
+                updateBatchResultAfterFixedAnswer(result, FixedAnswer(0, 0, false, null), false, tempDialog)
+            }
+        }
+        
+        // Обновляем весь список
+        batchResultsAdapter.notifyDataSetChanged()
+        Log.d("BatchActivity", "🔄 Все результаты обновлены с учетом исправлений")
+    }
+    
     private fun addAllResultsToReport() {
         val results = batchResultsAdapter.getResults()
         if (results.isEmpty()) {
@@ -916,8 +1372,16 @@ class BatchActivity : AppCompatActivity() {
         }
 
         var addedCount = 0
+        var skippedCount = 0
         results.forEach { result ->
             if (result.grade > 0) { // Добавляем только успешно обработанные результаты
+                // Проверяем, не добавлена ли уже работа в отчет
+                if (result.isAddedToReport) {
+                    Log.d("BatchActivity", "⏭️ Работа ${result.filename} уже добавлена в отчет, пропускаем")
+                    skippedCount++
+                    return@forEach
+                }
+                
                 // Создаем массив grading: 1 для правильных ответов, 0 для неправильных
                 val grading = IntArray(result.selectedAnswers.size) { questionIndex ->
                     if (result.errors.any { it.questionNumber == questionIndex + 1 }) 0 else 1
@@ -948,11 +1412,16 @@ class BatchActivity : AppCompatActivity() {
         }
 
         if (addedCount > 0) {
-            Toast.makeText(this, "Добавлено $addedCount результатов в отчет", Toast.LENGTH_SHORT).show()
+            val message = if (skippedCount > 0) {
+                "Добавлено $addedCount результатов в отчет (пропущено $skippedCount уже добавленных)"
+            } else {
+                "Добавлено $addedCount результатов в отчет"
+            }
+            Toast.makeText(this, message, Toast.LENGTH_LONG).show()
             btnAddAllToReport.isEnabled = false
             btnAddAllToReport.text = "Добавлено"
         } else {
-            Toast.makeText(this, "Нет успешно обработанных результатов для добавления", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Нет новых результатов для добавления в отчет", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -962,9 +1431,12 @@ class BatchActivity : AppCompatActivity() {
             .setView(dialogView)
             .create()
 
+        // Убираем белые углы
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+
         val etCriteriaName = dialogView.findViewById<EditText>(R.id.et_criteria_name)
-        val btnCancel = dialogView.findViewById<Button>(R.id.btn_cancel)
-        val btnSave = dialogView.findViewById<Button>(R.id.btn_save)
+        val btnCancel = dialogView.findViewById<MaterialButton>(R.id.btn_cancel)
+        val btnSave = dialogView.findViewById<MaterialButton>(R.id.btn_save)
 
         btnCancel.setOnClickListener {
             dialog.dismiss()
@@ -1010,9 +1482,11 @@ class BatchActivity : AppCompatActivity() {
             .setView(dialogView)
             .create()
 
+        // Убираем белые углы
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+
         val layoutCriteriaList = dialogView.findViewById<LinearLayout>(R.id.layout_criteria_list)
-        val btnCancel = dialogView.findViewById<Button>(R.id.btn_cancel_load)
-        val btnDelete = dialogView.findViewById<Button>(R.id.btn_delete_criteria)
+        val btnCancel = dialogView.findViewById<MaterialButton>(R.id.btn_cancel_load)
 
         var selectedCriteria: BatchCriteria? = null
 
@@ -1210,6 +1684,14 @@ class BatchActivity : AppCompatActivity() {
         // Сбрасываем номер работы и очищаем карту имен
         currentWorkNumber = 1
         photoWorkNames.clear()
+        workCounter = 0 // Сбрасываем счетчик работ
+        
+        // Сбрасываем систему номеров работ
+        usedWorkNumbers.clear()
+        nextAvailableWorkNumber = 1
+        
+        // Очищаем данные об исправлениях
+        fixedAnswerProcessor.clearAllData()
         
         createAnswersGrid()
     }
@@ -1300,64 +1782,13 @@ class BatchActivity : AppCompatActivity() {
         cardProgress.visibility = View.GONE
     }
     
-    private fun showVisualizationDialog(result: BatchResult) {
-        val dialogView = LayoutInflater.from(this).inflate(R.layout.visualization_dialog, null)
-        
-        val dialog = AlertDialog.Builder(this, R.style.CustomAlertDialog)
-            .setView(dialogView)
-            .create()
-            
-        val ivContourImage = dialogView.findViewById<ImageView>(R.id.iv_contour_image)
-        val ivGridImage = dialogView.findViewById<ImageView>(R.id.iv_grid_image)
-        val btnClose = dialogView.findViewById<Button>(R.id.btn_close)
-        
-        // Показываем визуализацию контура
-        if (result.contourVisualization != null) {
-            ivContourImage.setImageBitmap(result.contourVisualization)
-        } else {
-            ivContourImage.setImageResource(android.R.drawable.ic_menu_camera)
-        }
-        
-        // Показываем визуализацию сетки
-        if (result.gridVisualization != null) {
-            ivGridImage.setImageBitmap(result.gridVisualization)
-        } else {
-            ivGridImage.setImageResource(android.R.drawable.ic_menu_camera)
-        }
-        
-        btnClose.setOnClickListener {
-            dialog.dismiss()
-        }
-        
-        dialog.show()
-    }
+
 
     // Методы для работы с камерой
     private fun showCameraSetupDialog() {
-        val dialogView = LayoutInflater.from(this).inflate(R.layout.batch_camera_dialog, null)
-        val dialog = AlertDialog.Builder(this, R.style.CustomAlertDialog)
-            .setView(dialogView)
-            .create()
-
-        val etStartNumber = dialogView.findViewById<EditText>(R.id.et_start_number)
-        val btnCancel = dialogView.findViewById<Button>(R.id.btn_cancel_camera)
-        val btnStart = dialogView.findViewById<Button>(R.id.btn_start_camera)
-
-        // Устанавливаем текущий номер работы
-        etStartNumber.setText(currentWorkNumber.toString())
-
-        btnCancel.setOnClickListener {
-            dialog.dismiss()
-        }
-
-        btnStart.setOnClickListener {
-            val startNumber = etStartNumber.text.toString().toIntOrNull() ?: 1
-            currentWorkNumber = startNumber
-            dialog.dismiss()
-            takePhoto()
-        }
-
-        dialog.show()
+        // Убираем лишний диалог с начальным номером - сразу открываем камеру
+        // Номер работы будет указан в финальном диалоге
+        takePhoto()
     }
 
     private fun takePhoto() {
@@ -1388,14 +1819,55 @@ class BatchActivity : AppCompatActivity() {
             .setView(dialogView)
             .create()
 
-        val tvWorkNumber = dialogView.findViewById<TextView>(R.id.tv_work_number)
+        val etWorkNumber = dialogView.findViewById<EditText>(R.id.et_work_number)
+        val tvWorkNumberError = dialogView.findViewById<TextView>(R.id.tv_work_number_error)
         val ivPhoto = dialogView.findViewById<ImageView>(R.id.iv_photo)
         val btnRetake = dialogView.findViewById<Button>(R.id.btn_retake)
         val btnAdd = dialogView.findViewById<Button>(R.id.btn_add_photo)
-        val btnFinish = dialogView.findViewById<Button>(R.id.btn_finish_camera)
+        val btnNext = dialogView.findViewById<Button>(R.id.btn_next_photo)
 
-        // Показываем номер работы
-        tvWorkNumber.text = "Работа $currentWorkNumber"
+        // Устанавливаем следующий доступный номер работы
+        etWorkNumber.setText(nextAvailableWorkNumber.toString())
+        
+        // Функция валидации номера работы
+        fun validateWorkNumber(): Boolean {
+            val workNumberText = etWorkNumber.text.toString()
+            if (workNumberText.isEmpty()) {
+                tvWorkNumberError.text = "Введите номер работы"
+                tvWorkNumberError.visibility = View.VISIBLE
+                etWorkNumber.setTextColor(getColor(R.color.error))
+                return false
+            }
+            
+            val workNumber = workNumberText.toIntOrNull()
+            if (workNumber == null || workNumber <= 0) {
+                tvWorkNumberError.text = "Номер работы должен быть положительным числом"
+                tvWorkNumberError.visibility = View.VISIBLE
+                etWorkNumber.setTextColor(getColor(R.color.error))
+                return false
+            }
+            
+            if (usedWorkNumbers.contains(workNumber)) {
+                tvWorkNumberError.text = "Номер работы $workNumber уже занят. Следующий свободный: $nextAvailableWorkNumber"
+                tvWorkNumberError.visibility = View.VISIBLE
+                etWorkNumber.setTextColor(getColor(R.color.error))
+                return false
+            }
+            
+            // Номер валиден
+            tvWorkNumberError.visibility = View.GONE
+            etWorkNumber.setTextColor(getColor(R.color.text_inverse))
+            return true
+        }
+        
+        // Валидация при вводе
+        etWorkNumber.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: android.text.Editable?) {
+                validateWorkNumber()
+            }
+        })
 
         // Загружаем фотографию
         try {
@@ -1414,42 +1886,247 @@ class BatchActivity : AppCompatActivity() {
         }
 
         btnAdd.setOnClickListener {
+            // Проверяем валидность номера работы
+            if (!validateWorkNumber()) {
+                Toast.makeText(this, "Исправьте ошибки в номере работы", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            
+            val workNumber = etWorkNumber.text.toString().toInt()
+            
+            // Проверяем, не добавлен ли уже файл с таким именем
+            val fileName = getFileNameFromUri(uri)
+            if (selectedImages.any { existingUri ->
+                getFileNameFromUri(existingUri) == fileName
+            }) {
+                Toast.makeText(this, "Файл с именем '$fileName' уже добавлен", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            
+            // Проверяем, не был ли файл уже обработан ранее
+            if (processedFileNames.contains(fileName)) {
+                Toast.makeText(this, "Файл '$fileName' уже был обработан ранее", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            
             // Добавляем фотографию в список
             selectedImages.add(uri)
             
             // Сохраняем имя работы для этого URI
-            val workName = "Работа $currentWorkNumber"
-            photoWorkNames[uri] = workName
+            val workName = "Работа $workNumber"
+            photoWorkNames[uri] = workNumber.toString() // Сохраняем номер работы
+            
+            // Добавляем номер в использованные
+            usedWorkNumbers.add(workNumber)
+            
+            // Обновляем следующий доступный номер
+            updateNextAvailableWorkNumber()
             
             updateSelectedCount()
             updateProcessButton()
-            
-            // Увеличиваем номер работы
-            currentWorkNumber++
             
             Toast.makeText(this, "$workName добавлена", Toast.LENGTH_SHORT).show()
             
-            // Продолжаем фотографирование
+            // Закрываем диалог и НЕ продолжаем фотографирование
             dialog.dismiss()
-            takePhoto()
         }
 
-        btnFinish.setOnClickListener {
-            // Добавляем последнюю фотографию
+        // Кнопка "Следующая работа"
+        btnNext.setOnClickListener {
+            if (!validateWorkNumber()) {
+                Toast.makeText(this, "Исправьте ошибки в номере работы", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            
+            val workNumber = etWorkNumber.text.toString().toInt()
+            val fileName = getFileNameFromUri(uri)
+            
+            // Проверяем дубликаты
+            if (selectedImages.any { existingUri ->
+                getFileNameFromUri(existingUri) == fileName
+            }) {
+                Toast.makeText(this, "Файл с именем '$fileName' уже добавлен", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            
+            if (processedFileNames.contains(fileName)) {
+                Toast.makeText(this, "Файл '$fileName' уже был обработан ранее", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            
+            // Добавляем фотографию
             selectedImages.add(uri)
+            photoWorkNames[uri] = workNumber.toString()
+            usedWorkNumbers.add(workNumber)
+            updateNextAvailableWorkNumber()
             
-            // Сохраняем имя работы для этого URI
-            val workName = "Работа $currentWorkNumber"
-            photoWorkNames[uri] = workName
-            
+            // Обновляем UI
             updateSelectedCount()
             updateProcessButton()
             
-            Toast.makeText(this, "Фотографирование завершено. $workName добавлена", Toast.LENGTH_SHORT).show()
+            // Закрываем диалог и делаем следующее фото
+            dialog.dismiss()
+            takePhoto() // Сразу делаем следующее фото
+            
+            Toast.makeText(this, "Фотография добавлена как Работа $workNumber. Делаем следующее фото...", Toast.LENGTH_SHORT).show()
+        }
+
+        dialog.show()
+    }
+    
+    // ===== РЕАЛИЗАЦИЯ FixedAnswerCallback =====
+    
+    override fun onFixedAnswerDetected(fixedAnswer: FixedAnswer, onUserDecision: (Boolean) -> Unit) {
+        Log.d("BatchActivity", "⚠️ Обнаружено исправление в вопросе ${fixedAnswer.questionNumber}")
+        
+        // Сохраняем исправление для текущего обрабатываемого файла
+        val currentFilename = "current_processing" // Временно, нужно будет передавать реальное имя файла
+        pendingFixedAnswers.getOrPut(currentFilename) { mutableListOf() }.add(fixedAnswer)
+        
+        // Пока что автоматически считаем исправление ошибкой (будет переопределено в диалоге)
+        onUserDecision(true)
+    }
+    
+    override fun onAllFixedAnswersProcessed(finalResult: OMRResult) {
+        Log.d("BatchActivity", "✅ Все исправления обработаны, обновляем результаты")
+        
+        // Здесь будет логика обновления результатов после принятия решений пользователем
+        // Пока что просто логируем
+    }
+    
+    /**
+     * Возвращает цвет для оценки
+     */
+    private fun getGradeColor(grade: Int): Int {
+        return when (grade) {
+            5 -> Color.parseColor("#4CAF50") // Зеленый
+            4 -> Color.parseColor("#8BC34A") // Светло-зеленый
+            3 -> Color.parseColor("#FFC107") // Желтый
+            2 -> Color.parseColor("#F44336") // Красный
+            else -> Color.GRAY
+        }
+    }
+    
+    /**
+     * Обновляет следующий доступный номер работы
+     */
+    private fun updateNextAvailableWorkNumber() {
+        // Начинаем с 1 и ищем первый свободный номер
+        var candidate = 1
+        while (usedWorkNumbers.contains(candidate)) {
+            candidate++
+        }
+        nextAvailableWorkNumber = candidate
+    }
+    
+    /**
+     * Получает следующий доступный номер работы
+     */
+    private fun getNextAvailableWorkNumber(): Int {
+        updateNextAvailableWorkNumber()
+        return nextAvailableWorkNumber
+    }
+    
+    /**
+     * Получает имя файла из URI
+     */
+    private fun getFileNameFromUri(uri: Uri): String {
+        return try {
+            val cursor = contentResolver.query(uri, null, null, null, null)
+            cursor?.use {
+                val nameIndex = it.getColumnIndex(MediaStore.MediaColumns.DISPLAY_NAME)
+                if (nameIndex != -1) {
+                    it.getString(nameIndex)
+                } else {
+                    uri.lastPathSegment ?: "unknown_file"
+                }
+            } ?: (uri.lastPathSegment ?: "unknown_file")
+        } catch (e: Exception) {
+            uri.lastPathSegment ?: "unknown_file"
+        }
+    }
+    
+    /**
+     * Показывает умный диалог сброса
+     */
+    private fun showSmartResetDialog() {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.batch_smart_reset_dialog, null)
+        val dialog = AlertDialog.Builder(this, R.style.CustomAlertDialog)
+            .setView(dialogView)
+            .create()
+
+        // Убираем белые углы
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+
+        // Находим кнопки
+        val btnResetAll = dialogView.findViewById<MaterialButton>(R.id.btn_reset_all)
+        val btnResetResults = dialogView.findViewById<MaterialButton>(R.id.btn_reset_results)
+        val btnResetWorks = dialogView.findViewById<MaterialButton>(R.id.btn_reset_works)
+        val btnCancel = dialogView.findViewById<MaterialButton>(R.id.btn_cancel)
+        val btnConfirm = dialogView.findViewById<MaterialButton>(R.id.btn_confirm)
+
+        // Переменная для хранения выбранного действия
+        var selectedAction: (() -> Unit)? = null
+
+        // Обработчики для кнопок выбора действия
+        btnResetAll.setOnClickListener {
+            selectedAction = { resetAll() }
+            // Визуально выделяем выбранную кнопку
+            btnResetAll.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#475569"))
+            btnResetResults.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#1E293B"))
+            btnResetWorks.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#1E293B"))
+        }
+
+        btnResetResults.setOnClickListener {
+            selectedAction = { resetOnlyResults() }
+            // Визуально выделяем выбранную кнопку
+            btnResetAll.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#1E293B"))
+            btnResetResults.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#475569"))
+            btnResetWorks.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#1E293B"))
+        }
+
+        btnResetWorks.setOnClickListener {
+            selectedAction = { resetOnlyLoadedWorks() }
+            // Визуально выделяем выбранную кнопку
+            btnResetAll.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#1E293B"))
+            btnResetResults.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#1E293B"))
+            btnResetWorks.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#475569"))
+        }
+
+        // Кнопка отмены
+        btnCancel.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        // Кнопка подтверждения
+        btnConfirm.setOnClickListener {
+            selectedAction?.invoke()
             dialog.dismiss()
         }
 
         dialog.show()
+    }
+    
+    /**
+     * Сбрасывает только результаты, оставляя загруженные работы
+     */
+    private fun resetOnlyResults() {
+        batchResultsAdapter.clearResults()
+        fixedAnswerProcessor.clearAllData()
+        Toast.makeText(this, "Результаты сброшены, загруженные работы готовы к повторной проверке", Toast.LENGTH_LONG).show()
+    }
+    
+    /**
+     * Сбрасывает только загруженные работы, оставляя результаты
+     */
+    private fun resetOnlyLoadedWorks() {
+        selectedImages.clear()
+        photoWorkNames.clear()
+        usedWorkNumbers.clear()
+        nextAvailableWorkNumber = 1
+        updateSelectedCount()
+        updateProcessButton()
+        Toast.makeText(this, "Загруженные работы сброшены, результаты сохранены", Toast.LENGTH_LONG).show()
     }
 
     companion object {

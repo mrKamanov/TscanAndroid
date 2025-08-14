@@ -24,7 +24,7 @@
             android:text="Результат проверки"
             android:textSize="20sp"
             android:textStyle="bold"
-            android:textColor="@color/text_inverse"
+            android:textColor="#CBD5E1"
             android:fontFamily="@font/krabuler" />
 
         <ImageView
@@ -105,7 +105,7 @@
                         android:text="Статистика"
                         android:textSize="16sp"
                         android:textStyle="bold"
-                        android:textColor="@color/text_inverse"
+                        android:textColor="#CBD5E1"
                         android:fontFamily="@font/krabuler"
                         android:layout_marginBottom="12dp" />
 
@@ -189,7 +189,7 @@
                         android:text="Детали ошибок"
                         android:textSize="16sp"
                         android:textStyle="bold"
-                        android:textColor="@color/text_inverse"
+                        android:textColor="#CBD5E1"
                         android:fontFamily="@font/krabuler"
                         android:layout_marginBottom="12dp" />
 
@@ -200,6 +200,47 @@
 
                         <LinearLayout
                             android:id="@+id/layout_error_details"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical" />
+                    </ScrollView>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Исправления -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/card_fixed_answers"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"
+                app:cardBackgroundColor="@color/card_background"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="⚠️ Обнаруженные исправления (выберите считать ли ошибкой)"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#CBD5E1"
+                        android:fontFamily="@font/krabuler"
+                        android:layout_marginBottom="12dp" />
+
+                    <ScrollView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:maxHeight="200dp">
+
+                        <LinearLayout
+                            android:id="@+id/layout_fixed_answers"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="vertical" />
@@ -219,7 +260,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="56dp"
                     android:text="Добавить в отчет"
-                    android:textColor="#FFFFFF"
+                    android:textColor="#CBD5E1"
                     android:textStyle="bold"
                     android:textSize="16sp"
                     android:fontFamily="@font/krabuler"

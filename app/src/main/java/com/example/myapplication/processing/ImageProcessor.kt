@@ -299,7 +299,8 @@ class ImageProcessor {
         questionsCount: Int,
         choicesCount: Int,
         correctAnswers: List<Int>,
-        onProgressUpdate: ((Int, Int, Boolean) -> Unit)? = null
+        onProgressUpdate: ((Int, Int, Boolean) -> Unit)? = null,
+        fixedAnswerCallback: FixedAnswerCallback? = null
     ): OMRResult? {
         try {
             Log.d(TAG, "🔍 Начинаем ML обработку кадра: ${inputBitmap.width}x${inputBitmap.height}")
@@ -397,7 +398,7 @@ class ImageProcessor {
                 drawGridOnMat(gridMat, questionsCount, choicesCount)
                 
                 // Обрабатываем бланк с ML с приоритетной обработкой
-                val result = processTestSheetWithPriority(warp, questionsCount, choicesCount, correctAnswers, onProgressUpdate, null)
+                val result = processTestSheetWithPriority(warp, questionsCount, choicesCount, correctAnswers, onProgressUpdate, fixedAnswerCallback)
                 
                 // Добавляем визуализацию к результату
                 if (result != null) {

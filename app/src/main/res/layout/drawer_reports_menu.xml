@@ -14,7 +14,7 @@
         android:text="⚙️ Настройки"
         android:textSize="20sp"
         android:textStyle="bold"
-        android:textColor="@color/white"
+        android:textColor="#CBD5E1"
         android:fontFamily="@font/krabuler"
         android:gravity="center"
         android:layout_marginBottom="24dp" />
@@ -25,7 +25,7 @@
         android:layout_height="wrap_content"
         android:text="📊 Режим оценки"
         android:textSize="16sp"
-        android:textColor="@color/white"
+        android:textColor="#CBD5E1"
         android:fontFamily="@font/krabuler"
         android:layout_marginBottom="8dp" />
 
@@ -42,7 +42,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Проценты"
-            android:textColor="@color/white"
+            android:textColor="#CBD5E1"
             android:fontFamily="@font/krabuler"
             android:buttonTint="@color/primary_blue"
             android:checked="true" />
@@ -53,7 +53,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Баллы"
-            android:textColor="@color/white"
+            android:textColor="#CBD5E1"
             android:fontFamily="@font/krabuler"
             android:buttonTint="@color/primary_blue" />
 
@@ -65,7 +65,7 @@
         android:layout_height="wrap_content"
         android:text="🎯 Критерии оценок"
         android:textSize="16sp"
-        android:textColor="@color/white"
+        android:textColor="#CBD5E1"
         android:fontFamily="@font/krabuler"
         android:layout_marginBottom="16dp" />
 
@@ -82,7 +82,7 @@
             android:layout_height="wrap_content"
             android:text="5:"
             android:textSize="16sp"
-            android:textColor="@color/success_green"
+            android:textColor="#A3BE8C"
             android:fontFamily="@font/krabuler"
             android:textStyle="bold" />
 
@@ -92,7 +92,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginStart="8dp"
-            android:hint="90%"
+            android:hint="Введите % или балл"
             android:text="90"
             android:inputType="number"
             android:textColor="@color/white"
@@ -126,7 +126,7 @@
             android:layout_height="wrap_content"
             android:text="4:"
             android:textSize="16sp"
-            android:textColor="@color/accent"
+            android:textColor="#3B82F6"
             android:fontFamily="@font/krabuler"
             android:textStyle="bold" />
 
@@ -136,7 +136,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginStart="8dp"
-            android:hint="75%"
+            android:hint="Введите % или балл"
             android:text="75"
             android:inputType="number"
             android:textColor="@color/white"
@@ -170,7 +170,7 @@
             android:layout_height="wrap_content"
             android:text="3:"
             android:textSize="16sp"
-            android:textColor="@color/warning"
+            android:textColor="#F59E0B"
             android:fontFamily="@font/krabuler"
             android:textStyle="bold" />
 
@@ -180,7 +180,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginStart="8dp"
-            android:hint="60%"
+            android:hint="Введите % или балл"
             android:text="60"
             android:inputType="number"
             android:textColor="@color/white"
@@ -214,7 +214,7 @@
             android:layout_height="wrap_content"
             android:text="2:"
             android:textSize="16sp"
-            android:textColor="@color/error"
+            android:textColor="#BF616A"
             android:fontFamily="@font/krabuler"
             android:textStyle="bold" />
 
@@ -224,7 +224,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginStart="8dp"
-            android:hint="45%"
+            android:hint="Введите % или балл"
             android:text="45"
             android:inputType="number"
             android:textColor="@color/white"
@@ -259,7 +259,7 @@
         android:layout_width="match_parent"
         android:layout_height="56dp"
         android:text="✅ Применить"
-        android:textColor="#FFFFFF"
+        android:textColor="#CBD5E1"
         android:textStyle="bold"
         android:textSize="16sp"
         android:fontFamily="@font/krabuler"
@@ -281,11 +281,11 @@
         android:layout_width="match_parent"
         android:layout_height="56dp"
         android:text="📊 Экспорт в Excel"
-        android:textColor="#FFFFFF"
+        android:textColor="#CBD5E1"
         android:textStyle="bold"
         android:textSize="16sp"
         android:fontFamily="@font/krabuler"
-        android:backgroundTint="#2563EB"
+        android:backgroundTint="#3B82F6"
         app:cornerRadius="28dp"
         app:strokeColor="#475569"
         app:strokeWidth="2dp"
@@ -303,11 +303,11 @@
         android:layout_width="match_parent"
         android:layout_height="56dp"
         android:text="🗑️ Сбросить отчеты"
-        android:textColor="#FFFFFF"
+        android:textColor="#CBD5E1"
         android:textStyle="bold"
         android:textSize="16sp"
         android:fontFamily="@font/krabuler"
-        android:backgroundTint="#DC2626"
+        android:backgroundTint="#BF616A"
         app:cornerRadius="28dp"
         app:strokeColor="#475569"
         app:strokeWidth="2dp"

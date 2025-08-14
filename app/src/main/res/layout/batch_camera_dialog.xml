@@ -13,7 +13,7 @@
         android:text="Фотографирование бланков"
         android:textSize="20sp"
         android:textStyle="bold"
-        android:textColor="@color/text_inverse"
+        android:textColor="#CBD5E1"
         android:fontFamily="@font/krabuler"
         android:layout_marginBottom="16dp" />
 
@@ -81,7 +81,7 @@
             android:layout_height="56dp"
             android:layout_weight="1"
             android:text="Начать"
-            android:textColor="#FFFFFF"
+            android:textColor="#CBD5E1"
             android:textStyle="bold"
             android:textSize="16sp"
             android:fontFamily="@font/krabuler"

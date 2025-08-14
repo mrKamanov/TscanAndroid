@@ -18,7 +18,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="🔗 Связанные ошибки"
-            android:textColor="@android:color/white"
+            android:textColor="#CBD5E1"
             android:textSize="18sp"
             android:textStyle="bold"
             android:layout_marginBottom="12dp" />

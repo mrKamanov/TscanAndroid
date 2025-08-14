@@ -22,7 +22,7 @@
         android:text="Пакетная обработка"
         android:textSize="24sp"
         android:textStyle="bold"
-        android:textColor="@color/text_inverse"
+        android:textColor="#CBD5E1"
             android:fontFamily="@font/krabuler" />
 
         <!-- Кнопка "Начать заново" (серая овальная) -->
@@ -80,7 +80,7 @@
                         android:text="Настройки критериев"
                         android:textSize="18sp"
                         android:textStyle="bold"
-                        android:textColor="@color/text_inverse"
+                        android:textColor="#CBD5E1"
                         android:fontFamily="@font/krabuler"
                         android:layout_marginBottom="12dp" />
 
@@ -178,7 +178,7 @@
                              android:layout_weight="1"
                              android:layout_marginEnd="4dp"
                              android:text="Применить"
-                             android:textColor="#FFFFFF"
+                             android:textColor="#CBD5E1"
                              android:textStyle="bold"
                              android:textSize="11sp"
                              android:fontFamily="@font/krabuler"
@@ -202,7 +202,7 @@
                              android:layout_marginStart="4dp"
                              android:layout_marginEnd="4dp"
                              android:text="Сохранить"
-                             android:textColor="#FFFFFF"
+                             android:textColor="#CBD5E1"
                              android:textStyle="bold"
                              android:textSize="11sp"
                              android:fontFamily="@font/krabuler"
@@ -264,7 +264,7 @@
                         android:text="Загрузка изображений"
                         android:textSize="18sp"
                         android:textStyle="bold"
-                        android:textColor="@color/text_inverse"
+                        android:textColor="#CBD5E1"
                         android:fontFamily="@font/krabuler"
                         android:layout_marginBottom="12dp" />
 
@@ -275,7 +275,7 @@
                          android:layout_height="48dp"
                          android:layout_marginBottom="8dp"
                          android:text="Выбрать изображения"
-                         android:textColor="#FFFFFF"
+                         android:textColor="#CBD5E1"
                          android:textStyle="bold"
                          android:textSize="14sp"
                          android:fontFamily="@font/krabuler"
@@ -297,7 +297,7 @@
                          android:layout_height="48dp"
                          android:layout_marginBottom="8dp"
                          android:text="📷 Фотографировать"
-                         android:textColor="#FFFFFF"
+                         android:textColor="#CBD5E1"
                          android:textStyle="bold"
                          android:textSize="14sp"
                          android:fontFamily="@font/krabuler"
@@ -323,27 +323,27 @@
             </androidx.cardview.widget.CardView>
 
                          <!-- Кнопка "Начать обработку" (зеленая овальная) -->
-             <com.google.android.material.button.MaterialButton
+                          <com.google.android.material.button.MaterialButton
                  android:id="@+id/btn_process"
                  android:layout_width="match_parent"
                  android:layout_height="48dp"
                  android:layout_marginBottom="16dp"
                  android:text="Начать обработку"
-                 android:textColor="#FFFFFF"
+                 android:textColor="#CBD5E1"
                  android:textStyle="bold"
                  android:textSize="14sp"
                  android:fontFamily="@font/krabuler"
                  android:backgroundTint="#16A34A"
                  app:cornerRadius="24dp"
-                 app:strokeColor="#475569"
-                 app:strokeWidth="2dp"
-                 android:paddingStart="16dp"
-                 android:paddingEnd="16dp"
-                 android:elevation="0dp"
-                 android:stateListAnimator="@null"
-                 style="@style/Widget.MaterialComponents.Button"
-                 android:contentDescription="Начать пакетную обработку изображений"
-                 android:enabled="false" />
+                                 app:strokeColor="#475569"
+                                 app:strokeWidth="2dp"
+                                 android:paddingStart="16dp"
+                                 android:paddingEnd="16dp"
+                                 android:elevation="0dp"
+                                 android:stateListAnimator="@null"
+                                 style="@style/Widget.MaterialComponents.Button"
+                                 android:contentDescription="Начать пакетную обработку изображений"
+                                 android:enabled="false" />
 
             <!-- Прогресс обработки -->
             <androidx.cardview.widget.CardView
@@ -368,7 +368,7 @@
                         android:layout_height="wrap_content"
                         android:text="Обработка изображений..."
                         android:textSize="16sp"
-                        android:textColor="@color/text_inverse"
+                        android:textColor="#CBD5E1"
                         android:fontFamily="@font/krabuler"
                         android:layout_marginBottom="8dp" />
 
@@ -410,7 +410,7 @@
                         android:text="Результаты обработки"
                         android:textSize="18sp"
                         android:textStyle="bold"
-                        android:textColor="@color/text_inverse"
+                        android:textColor="#CBD5E1"
                         android:fontFamily="@font/krabuler"
                         android:layout_marginBottom="12dp" />
 
@@ -430,7 +430,7 @@
                  android:layout_height="48dp"
                  android:layout_marginTop="16dp"
                  android:text="Добавить все в отчет"
-                 android:textColor="#FFFFFF"
+                 android:textColor="#CBD5E1"
                  android:textStyle="bold"
                  android:textSize="14sp"
                  android:fontFamily="@font/krabuler"

@@ -3,6 +3,6 @@
 <!-- Фон для значений (маленькие овальные бейджи) -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
-    <solid android:color="#16A34A" />
+    <solid android:color="#A3BE8C" />
     <corners android:radius="16dp" />
 </shape>

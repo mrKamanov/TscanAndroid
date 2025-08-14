@@ -509,6 +509,9 @@ class ReportsManager(private val context: Context) {
 
         // Анализ связанных ошибок
         val relatedErrors = analyzeRelatedErrors()
+        
+        // Анализ идентичных работ
+        val identicalWorks = analyzeIdenticalWorks()
 
         return mapOf(
             "totalWorks" to totalWorks,
@@ -517,7 +520,8 @@ class ReportsManager(private val context: Context) {
             "gradeDistribution" to gradeDistribution,
             "errorAnalysis" to errorAnalysis,
             "questionHeatmap" to questionHeatmap,
-            "relatedErrors" to relatedErrors
+            "relatedErrors" to relatedErrors,
+            "identicalWorks" to identicalWorks
         )
     }
 
@@ -569,6 +573,48 @@ class ReportsManager(private val context: Context) {
         
         // Сортируем по силе связи (корреляции)
         return relatedErrors.sortedByDescending { it["correlation"] as Double }.take(5)
+    }
+    
+    /**
+     * Анализирует идентичные работы
+     */
+    private fun analyzeIdenticalWorks(): List<Map<String, Any>> {
+        val totalWorks = reports.size
+        if (totalWorks < 2) return emptyList() // Нужно минимум 2 работы для анализа
+        
+        val identicalGroups = mutableMapOf<String, MutableList<Int>>()
+        
+        // Группируем работы по паттерну ответов
+        reports.forEach { report ->
+            val answerPattern = report.omrResult.selectedAnswers.contentHashCode().toString()
+            
+            if (identicalGroups.containsKey(answerPattern)) {
+                identicalGroups[answerPattern]!!.add(report.workNumber)
+            } else {
+                identicalGroups[answerPattern] = mutableListOf(report.workNumber)
+            }
+        }
+        
+        // Фильтруем только группы с 2+ работами
+        val result = identicalGroups
+            .filter { it.value.size >= 2 }
+            .map { (pattern, workNumbers) ->
+                val worksCount = workNumbers.size
+                val percentage = (worksCount.toDouble() / totalWorks) * 100
+                
+                mapOf(
+                    "answerPattern" to pattern,
+                    "worksCount" to worksCount,
+                    "totalWorks" to totalWorks,
+                    "percentage" to percentage,
+                    "workNames" to workNumbers.map { it.toString() }
+                )
+            }
+            .sortedByDescending { it["worksCount"] as Int }
+            .take(10) // Показываем топ-10 групп
+        
+        Log.d(TAG, "🔍 Найдено ${result.size} групп идентичных работ")
+        return result
     }
 }
 

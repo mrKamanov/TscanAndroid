@@ -30,7 +30,7 @@
             android:text="Название работы"
             android:textSize="20sp"
             android:textStyle="bold"
-            android:textColor="@color/white"
+            android:textColor="#CBD5E1"
             android:fontFamily="@font/krabuler" />
 
     </LinearLayout>
@@ -67,7 +67,7 @@
                 android:text="📊 Статистика"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:textColor="@color/white"
+                android:textColor="#CBD5E1"
                 android:fontFamily="@font/krabuler"
                 android:layout_marginBottom="12dp" />
 
@@ -83,7 +83,7 @@
                     android:layout_weight="1"
                     android:text="Правильных ответов:"
                     android:textSize="14sp"
-                    android:textColor="@color/white"
+                    android:textColor="#CBD5E1"
                     android:fontFamily="@font/krabuler" />
 
                 <TextView
@@ -110,7 +110,7 @@
                     android:layout_weight="1"
                     android:text="Неправильных ответов:"
                     android:textSize="14sp"
-                    android:textColor="@color/white"
+                    android:textColor="#CBD5E1"
                     android:fontFamily="@font/krabuler" />
 
                 <TextView
@@ -137,7 +137,7 @@
                     android:layout_weight="1"
                     android:text="Процент выполнения:"
                     android:textSize="14sp"
-                    android:textColor="@color/white"
+                    android:textColor="#CBD5E1"
                     android:fontFamily="@font/krabuler" />
 
                 <TextView
@@ -163,7 +163,7 @@
                     android:layout_weight="1"
                     android:text="Итоговая оценка:"
                     android:textSize="14sp"
-                    android:textColor="@color/white"
+                    android:textColor="#CBD5E1"
                     android:fontFamily="@font/krabuler" />
 
                 <TextView
@@ -203,7 +203,7 @@
                 android:text="❌ Ошибки"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:textColor="@color/white"
+                android:textColor="#CBD5E1"
                 android:fontFamily="@font/krabuler"
                 android:layout_marginBottom="8dp" />
 

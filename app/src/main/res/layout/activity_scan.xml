@@ -85,7 +85,7 @@
                         android:text="📋 Результаты проверки"
                         android:textStyle="bold"
                         android:textSize="18sp"
-                        android:textColor="@color/primary"
+                        android:textColor="#CBD5E1"
                         android:layout_marginBottom="8dp" />
 
                     <TextView
@@ -95,7 +95,7 @@
                         android:text="Нет данных"
                         android:textSize="14sp"
                         android:lineSpacingExtra="4dp"
-                        android:textColor="@color/text"
+                        android:textColor="#CBD5E1"
                         android:fontFamily="monospace"
                         android:background="@drawable/menu_card_bg"
                         android:padding="12dp"
@@ -156,11 +156,11 @@
                 android:insetRight="0dp"
                 android:padding="0dp"
                 app:icon="@drawable/add_to_report_button"
-                app:iconTint="#FFFFFF"
+                app:iconTint="#CBD5E1"
                 app:iconGravity="textStart"
                 app:iconSize="32dp"
                 app:iconPadding="0dp"
-                android:backgroundTint="#16A34A"
+                android:backgroundTint="#1E293B"
                 app:cornerRadius="28dp"
                 app:strokeColor="#475569"
                 app:strokeWidth="2dp"
@@ -210,11 +210,11 @@
                 android:insetRight="0dp"
                 android:padding="0dp"
                 app:icon="@drawable/ic_check_circle"
-                app:iconTint="#FFFFFF"
+                app:iconTint="#CBD5E1"
                 app:iconGravity="textStart"
                 app:iconSize="32dp"
                 app:iconPadding="0dp"
-                android:backgroundTint="#16A34A"
+                android:backgroundTint="#1E293B"
                 app:cornerRadius="28dp"
                 app:strokeColor="#475569"
                 app:strokeWidth="2dp"
@@ -268,14 +268,14 @@
                 android:layout_gravity="center_horizontal"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="8dp"
-                app:cardBackgroundColor="@color/success">
+                app:cardBackgroundColor="#1E293B">
 
                 <TextView
                     android:id="@+id/notification_text"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Операция выполнена успешно"
-                    android:textColor="@color/text_inverse"
+                    android:textColor="#CBD5E1"
                     android:textSize="14sp"
                     android:padding="12dp" />
             </androidx.cardview.widget.CardView>
@@ -361,7 +361,7 @@
                 app:iconTint="#FFFFFF"
                 app:iconGravity="textStart"
                 app:iconPadding="0dp"
-                android:backgroundTint="#DC2626"
+                android:backgroundTint="@color/error"
                 app:cornerRadius="48dp"
                 app:strokeColor="#475569"
                 app:strokeWidth="3dp"
